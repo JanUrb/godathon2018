@@ -21,6 +21,7 @@ type Group_attach_req struct {
 }
 
 type Group_attach_ack struct {
+	Id     int `json:"id"`
 	Result int `json:"result"`
 }
 
@@ -61,6 +62,7 @@ type Tx_demand_req struct {
 }
 
 type Tx_demand_ack struct {
+	Result  int `json:"result"`
 	Call_id int `json:"callId"`
 }
 
