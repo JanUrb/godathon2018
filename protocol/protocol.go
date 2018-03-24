@@ -3,21 +3,17 @@ package protocol
 import "encoding/json"
 
 const (
-	// register_req    = "register_req"
-	// register_ack    = "register_ack"
+	MessageType_register_req    = "register_req"
+	MessageType_register_ack    = "register_ack"
 	MessageType_groupAttach_req = "groupAttach_req"
 	MessageType_groupAttach_ack = "groupAttach_ack"
 	MessageType_setup_req       = "setup_req"
 	MessageType_setup_ack       = "setup_ack"
 	MessageType_setup_ind       = "setup_ind"
 	MessageType_setup_res       = "setup_res"
-	MessageType_connect_req     = "connect_req"
-	MessageType_connect_ack     = "connect_ack"
-	MessageType_txDemand_req    = "txDemand_req"
-	MessageType_txDemand_ack    = "txDemand_ack"
-	MessageType_txCeased_req    = "txCeased_req"
-	MessageType_txCeased_ack    = "txCeased_ack"
-	MessageType_txInfo_ind      = "txInfo_ind"
+	MessageType_disconnect_req  = "disconnect_req"
+	MessageType_disconnect_ack  = "disconnect_ack"
+	MessageType_disconnect_ind  = "disconnect_ind"
 )
 
 type Generic_message struct {
@@ -25,12 +21,11 @@ type Generic_message struct {
 	Payload  json.RawMessage `json:"payload"`
 }
 
-type Register_req_payload struct {
-	User  int    `json:"user"`
-	Token string `json:"token"`
+type Register_req struct {
+	User int `json:"user"`
 }
 
-type Register_ack_payload struct {
+type Register_ack struct {
 	Result int `json:"result"`
 }
 
@@ -65,51 +60,31 @@ type Setup_res struct {
 	Call_id int `json:"callId"`
 }
 
-type Connect_req struct {
+type Disconnect_req struct {
 	Call_id int `json:"callId"`
 }
 
-type Connect_ack struct {
-	Result           int `json:"result"`
-	Call_id          int `json:"callId"`
-	Talking_party_id int `json:"talkingPartyId"`
-}
-
-type Tx_demand_req struct {
-	Call_id int `json:"callId"`
-}
-
-type Tx_demand_ack struct {
+type Disconnect_ack struct {
 	Result  int `json:"result"`
 	Call_id int `json:"callId"`
 }
 
-type Tx_ceased_req struct {
+type Disconnect_ind struct {
 	Call_id int `json:"callId"`
 }
 
-type Tx_ceased_ack struct {
-	Result  int `json:"result"`
-	Call_id int `json:"callId"`
-}
-
-type Tx_info_ind struct {
-	Call_id          int `json:"callId"`
-	Talking_party_id int `json:"talkingPartyId"`
-}
-
-func EncodeRegisterReqPayload(data Register_req_payload) ([]byte, error, error) {
+func EncodeRegisterReq(data Register_req) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "register_req"
+	msgStruct.Msg_type = MessageType_register_req
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
 	return msg, err1, err2
 }
 
-func EncodeRegisterAckPayload(data Register_ack_payload) ([]byte, error, error) {
+func EncodeRegisterAck(data Register_ack) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "register_ack"
+	msgStruct.Msg_type = MessageType_register_ack
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -118,7 +93,7 @@ func EncodeRegisterAckPayload(data Register_ack_payload) ([]byte, error, error) 
 
 func EncodeGroupAttachReq(data Group_attach_req) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "groupAttach_req"
+	msgStruct.Msg_type = MessageType_groupAttach_req
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -127,7 +102,7 @@ func EncodeGroupAttachReq(data Group_attach_req) ([]byte, error, error) {
 
 func EncodeGroupAttachAck(data Group_attach_ack) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "groupAttach_ack"
+	msgStruct.Msg_type = MessageType_groupAttach_ack
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -136,7 +111,7 @@ func EncodeGroupAttachAck(data Group_attach_ack) ([]byte, error, error) {
 
 func EncodeSetupReq(data Setup_req) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "setup_req"
+	msgStruct.Msg_type = MessageType_setup_req
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -145,7 +120,7 @@ func EncodeSetupReq(data Setup_req) ([]byte, error, error) {
 
 func EncodeSetupAck(data Setup_ack) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "setup_ack"
+	msgStruct.Msg_type = MessageType_setup_ack
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -154,7 +129,7 @@ func EncodeSetupAck(data Setup_ack) ([]byte, error, error) {
 
 func EncodeSetupInd(data Setup_ind) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "setup_ind"
+	msgStruct.Msg_type = MessageType_setup_ind
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
@@ -163,84 +138,48 @@ func EncodeSetupInd(data Setup_ind) ([]byte, error, error) {
 
 func EncodeSetupRes(data Setup_res) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "setup_res"
+	msgStruct.Msg_type = MessageType_setup_res
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
 	return msg, err1, err2
 }
 
-func EncodeConnectReq(data Connect_req) ([]byte, error, error) {
+func EncodeDisconnectReq(data Disconnect_req) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "connect_req"
+	msgStruct.Msg_type = MessageType_disconnect_req
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
 	return msg, err1, err2
 }
 
-func EncodeConnectAck(data Connect_ack) ([]byte, error, error) {
+func EncodeDisconnectAck(data Disconnect_ack) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "connect_ack"
+	msgStruct.Msg_type = MessageType_disconnect_ack
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
 	return msg, err1, err2
 }
 
-func EncodeTxDemandReq(data Tx_demand_req) ([]byte, error, error) {
+func EncodeDisconnectInd(data Disconnect_ind) ([]byte, error, error) {
 	var msgStruct Generic_message
-	msgStruct.Msg_type = "txDemand_req"
+	msgStruct.Msg_type = MessageType_disconnect_ind
 	payload, err1 := json.Marshal(data)
 	msgStruct.Payload = payload
 	msg, err2 := json.Marshal(msgStruct)
 	return msg, err1, err2
 }
 
-func EncodeTxDemandAck(data Tx_demand_ack) ([]byte, error, error) {
-	var msgStruct Generic_message
-	msgStruct.Msg_type = "txDemand_ack"
-	payload, err1 := json.Marshal(data)
-	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
-}
-
-func EncodeTxCeasedReq(data Tx_ceased_req) ([]byte, error, error) {
-	var msgStruct Generic_message
-	msgStruct.Msg_type = "txCeased_req"
-	payload, err1 := json.Marshal(data)
-	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
-}
-
-func EncodeTxCeasedAck(data Tx_ceased_ack) ([]byte, error, error) {
-	var msgStruct Generic_message
-	msgStruct.Msg_type = "txCeased_ack"
-	payload, err1 := json.Marshal(data)
-	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
-}
-
-func EncodeTxInfoInd(data Tx_info_ind) ([]byte, error, error) {
-	var msgStruct Generic_message
-	msgStruct.Msg_type = "txInfo_ind"
-	payload, err1 := json.Marshal(data)
-	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
-}
-
-func DecodeRegisterReqPayload(payload []byte) (Register_req_payload, error) {
-	var result Register_req_payload
+func DecodeRegisterReq(payload []byte) (Register_req, error) {
+	var result Register_req
 	err := json.Unmarshal(payload, &result)
 	return result, err
 }
 
-func DecodeRegisterAckPayload(payload []byte) (Register_ack_payload, error) {
-	var result Register_ack_payload
+func DecodeRegisterAck(payload []byte) (Register_ack, error) {
+	var result Register_ack
 	err := json.Unmarshal(payload, &result)
 	return result, err
 }
@@ -281,44 +220,20 @@ func DecodeSetupRes(payload []byte) (Setup_res, error) {
 	return result, err
 }
 
-func DecodeConnectReq(payload []byte) (Connect_req, error) {
-	var result Connect_req
+func DecodeDisconnectReq(payload []byte) (Disconnect_req, error) {
+	var result Disconnect_req
 	err := json.Unmarshal(payload, &result)
 	return result, err
 }
 
-func DecodeConnectAck(payload []byte) (Connect_ack, error) {
-	var result Connect_ack
+func DecodeDisconnectAck(payload []byte) (Disconnect_ack, error) {
+	var result Disconnect_ack
 	err := json.Unmarshal(payload, &result)
 	return result, err
 }
 
-func DecodeTxDemandReq(payload []byte) (Tx_demand_req, error) {
-	var result Tx_demand_req
-	err := json.Unmarshal(payload, &result)
-	return result, err
-}
-
-func DecodeTxDemandAck(payload []byte) (Tx_demand_ack, error) {
-	var result Tx_demand_ack
-	err := json.Unmarshal(payload, &result)
-	return result, err
-}
-
-func DecodeTxCeasedReq(payload []byte) (Tx_ceased_req, error) {
-	var result Tx_ceased_req
-	err := json.Unmarshal(payload, &result)
-	return result, err
-}
-
-func DecodeTxCeasedAck(payload []byte) (Tx_ceased_ack, error) {
-	var result Tx_ceased_ack
-	err := json.Unmarshal(payload, &result)
-	return result, err
-}
-
-func DecodeTxInfoInd(payload []byte) (Tx_info_ind, error) {
-	var result Tx_info_ind
+func DecodeDisconnectInd(payload []byte) (Disconnect_ind, error) {
+	var result Disconnect_ind
 	err := json.Unmarshal(payload, &result)
 	return result, err
 }
