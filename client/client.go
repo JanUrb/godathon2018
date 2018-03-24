@@ -20,6 +20,14 @@ type Client struct {
 
 var _ god.Client = &Client{} //compile time interface check
 
+func New(protocol god.Protocol, switcher god.Switching, conn *websocket.Conn) *Client {
+	return &Client{
+		protocol,
+		switcher,
+		conn,
+	}
+}
+
 func (c *Client) Listen() {
 	for {
 		websocketMessageType, b, err := c.conn.ReadMessage()
