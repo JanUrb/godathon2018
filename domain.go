@@ -12,4 +12,6 @@ type Protocol interface {
 
 type Web interface{}
 
-type Switching interface{}
+type Switching interface {
+	Call([]byte) error
+}
