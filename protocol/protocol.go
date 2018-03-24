@@ -2,6 +2,24 @@ package protocol
 
 import "encoding/json"
 
+const (
+	// register_req    = "register_req"
+	// register_ack    = "register_ack"
+	MessageType_groupAttach_req = "groupAttach_req"
+	MessageType_groupAttach_ack = "groupAttach_ack"
+	MessageType_setup_req       = "setup_req"
+	MessageType_setup_ack       = "setup_ack"
+	MessageType_setup_ind       = "setup_ind"
+	MessageType_setup_res       = "setup_res"
+	MessageType_connect_req     = "connect_req"
+	MessageType_connect_ack     = "connect_ack"
+	MessageType_txDemand_req    = "txDemand_req"
+	MessageType_txDemand_ack    = "txDemand_ack"
+	MessageType_txCeased_req    = "txCeased_req"
+	MessageType_txCeased_ack    = "txCeased_ack"
+	MessageType_txInfo_ind      = "txInfo_ind"
+)
+
 type Generic_message struct {
 	Msg_type string          `json:"type"`
 	Payload  json.RawMessage `json:"payload"`
@@ -21,6 +39,7 @@ type Group_attach_req struct {
 }
 
 type Group_attach_ack struct {
+	Id     int `json:"id"`
 	Result int `json:"result"`
 }
 
@@ -61,6 +80,7 @@ type Tx_demand_req struct {
 }
 
 type Tx_demand_ack struct {
+	Result  int `json:"result"`
 	Call_id int `json:"callId"`
 }
 
