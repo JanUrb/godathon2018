@@ -24,6 +24,7 @@ let groupAttach_req = {
 let groupAttach_ack = {
   type    : 'groupAttach_ack',
   payload : {
+    id : 9876
     result : 200
   }
 };
