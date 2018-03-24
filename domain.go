@@ -11,7 +11,9 @@ type Protocol interface {
 	Decode([]byte) (error, int, interface{})
 }
 
-type Web interface{}
+type Web interface {
+	Run()
+}
 
 type Switching interface {
 	Call([]byte) error
