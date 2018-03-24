@@ -20,6 +20,9 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:    2048,
 	WriteBufferSize:   2048,
 	EnableCompression: false,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 // Run Websocket server to allow client registrations
@@ -33,7 +36,7 @@ func (web Web) Run() {
 func (web Web) registerClient(resWriter http.ResponseWriter, req *http.Request) {
 	conn, err := upgrader.Upgrade(resWriter, req, nil)
 	if err != nil {
-		log.Println("Error while establishing websocket connection")
+		log.Println("Error while establishing websocket connection: ", err)
 		return
 	}
 	// Spawn new client
