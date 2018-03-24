@@ -40,7 +40,7 @@ func (c *Client) Listen() {
 		}
 
 		log.Println("Message type: ", websocketMessageType)
-		// TODO protocol decode message
+		//TODO protocol decode message
 		log.Println("Message content: ", b)
 
 	}
