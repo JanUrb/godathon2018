@@ -5,12 +5,12 @@ const example = 1
 type Client interface {
 	Write([]byte) error
 	Listen()
-	OnTxCeasedAck()
 	OnTxInfoInd()
-	OnTxDemandAck()
-	OnSetupAck()
-	OnSetupInd()
-	OnConnectAck()
+	OnSetupAck(int, int)
+	OnSetupInd(int, int, int)
+	OnSetupFailed()
+	OnDisconnectAck()
+	OnDisconnectInd()
 }
 
 type Protocol interface {
@@ -23,8 +23,6 @@ type Switching interface {
 	Call([]byte, int)
 	AttachGroup(int, int, Client) error
 	DetachGroup(int, int) error
-	RequestTxCeased()
-	RequestTxDemand()
-	RequestSetup()
-	RequestConnect()
+	RequestSetup(int, int)
+	DisconnectRequest(int, int)
 }

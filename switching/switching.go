@@ -4,6 +4,8 @@ import (
 	"github.com/JanUrb/godathon2018"
 )
 
+var callIDCounter = 0
+
 //Group sucks
 type Group struct {
 	talker  int
@@ -47,10 +49,25 @@ func (g Group) GetCalledClients() map[int]godathon2018.Client {
 	return calledClients
 }
 
+type Call struct {
+	callID  int
+	groupID int
+}
+
+//NewCall instance of a call
+func NewCall(callID int, groupID int) Call {
+	c := Call{
+		callID:  callID,
+		groupID: groupID,
+	}
+	return c
+}
+
 //Switcher sucks
 type Switcher struct {
-	groups  map[int]Group
-	clients map[int]godathon2018.Client
+	ongoingCalls map[int]Call
+	groups       map[int]Group
+	clients      map[int]godathon2018.Client
 }
 
 //Call distributes voice data to all called partys
@@ -62,31 +79,62 @@ func (s Switcher) Call(voiceData []byte, groupID int) {
 	}
 }
 
-//AttachClientToGroup attaches a client to a group
-func (s Switcher) AttachClientToGroup(groupID int, clientID int, client godathon2018.Client) error {
+//AttachGroup attaches a client to a group
+func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Client) {
 	s.groups[groupID].AddClient(clientID, client)
 }
 
-//DetachClientFromGroup detaches a client from a group
-func (s Switcher) DetachClientFromGroup(groupID int, clientID int) error {
+//DetachGroup detaches a client from a group
+func (s Switcher) DetachGroup(groupID int, clientID int) {
 	s.groups[groupID].RemoveClient(clientID)
 }
 
-//SetCaller sets the current talking party of a group. Throws error when there is already a talking party active
-func (s Switcher) SetCaller(groupID int, clientID int) error {
+//RequestTxDemand sets the current talking party of a group. Throws error when there is already a talking party active
+/*func (s Switcher) RequestTxDemand(groupID int, clientID int) {
 	var group = s.groups[groupID]
-	// there is already a caller, throw error
+	// there is already a caller, inform requesting client
 	if group.GetTalkingParty() != 0 {
 		// TODO throw error somehow
 	}
+	group.SetTalkingParty(clientID)
+	// inform calling party about TxCeased
+	client := s.clients[group.GetTalkingParty()]
+	client.OnTxCeasedAck()
+	// inform called partys about TxCeased
+	var calledClients = group.GetCalledClients()
+	for clientID, client := range calledClients {
+		client.OnTxInfoInd()
+	}
+}*/
+
+func (s Switcher) DisconnectRequest(groupID int, clientID int) {
+	var group = s.groups[groupID]
+	client := s.clients[group.GetTalkingParty()]
+	client.OnDisconnectAck()
+	var calledClients = group.GetCalledClients()
+	for clientID, client := range calledClients {
+		client.OnDisconnectInd()
+	}
+	// remove call from map
+	delete(s.ongoingCalls, groupID)
 }
 
-//RemoveCaller txCeased of current talking party
-func (s Switcher) RemoveCaller(groupID int, clientID int) error {
-	var group = s.groups[groupID]
-	// there is no caller, throw error
-	if group.GetTalkingParty() == 0 {
-		// TODO throw error somehow
+//RequestSetup bla
+func (s Switcher) RequestSetup(groupID int, clientID int) {
+	callIDCounter++
+	client := s.clients[clientID]
+	if val, ok := s.ongoingCalls[groupID]; ok {
+		client.OnSetupFailed()
+	} else {
+		call := NewCall(callIDCounter, groupID)
+		s.ongoingCalls[call.groupID] = call
+		var group = s.groups[groupID]
+		// inform calling party about call setup
+		client.OnSetupAck(200, call.callID)
+		// inform called partys about call setup
+		var calledClients = group.GetCalledClients()
+		for clientID, client := range calledClients {
+			client.OnSetupInd(groupID, clientID, call.callID)
+		}
 	}
-	// inform all clients that the talking party ceased tx
 }
