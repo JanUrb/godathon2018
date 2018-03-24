@@ -39,7 +39,7 @@ func (c *Client) Listen() {
 		websocketMessageType, b, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Println("Error while reading message from connection. ", err)
-			err := c.switcher.DetachGroup(c.groupID, c.clientID)
+			err = c.switcher.DetachGroup(c.groupID, c.clientID)
 			if err != nil {
 				log.Println("Error while detaching from group: ", c.groupID, " with client: ", c.clientID)
 				return
@@ -57,10 +57,8 @@ func (c *Client) Listen() {
 			continue // continue reading messages. No need to kill the client
 		}
 
-
-
 		log.Println("Message content: ", b)
-
+		c.resolveMessageID(genericMsg.Msg_type, genericMsg.Payload)
 	}
 }
 
@@ -74,43 +72,105 @@ func (c *Client) Write(data []byte) error {
 	return nil
 }
 
+func (c *Client) resolveMessageID(messageType string, payload []byte) {
+	switch messageType {
+	case protocol.MessageType_groupAttach_req:
+		{
+			req, err := protocol.DecodeGroupAttachReq(payload)
+			if err != nil {
+				log.Println("Could not decode group attach req ", payload)
+				return
+			}
+			err = c.switcher.AttachGroup(req.Id, 0, c)
+			if err != nil {
+				log.Println("Error while attaching to group ")
+				return
+			}
+		}
+	case protocol.MessageType_setup_req:
+		{
+			req, err := protocol.DecodeSetupReq(payload)
+			if err != nil {
+				log.Println("Error decide setup req")
+				return
+			}
+			log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
+			c.switcher.RequestSetup(0, 0)
+		}
 
-
-func (c *Client) resolveMessage(messageType int){
-	switch(messageType){
-	case: 
 	}
-}
-
-
-
-//OnTxCeasedAck sends to the underlying connection
-func (c *Client) OnTxCeasedAck() {
-
-	panic("not implemented")
-}
-
-//OnTxInfoInd sends to the underlying connection
-func (c *Client) OnTxInfoInd() {
-	panic("not implemented")
-}
-
-//OnTxDemandAck sends to the underlying connection
-func (c *Client) OnTxDemandAck() {
-	panic("not implemented")
 }
 
 //OnSetupAck sends to the underlying connection
 func (c *Client) OnSetupAck() {
-	panic("not implemented")
+	setupAck := protocol.Setup_ack{}
+	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
+	if err1 != nil || err2 != nil {
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while writing SetUpAckRequest ", err)
+		return
+	}
 }
 
 //OnSetupInd sends to the underlying connection
 func (c *Client) OnSetupInd() {
-	panic("not implemented")
+	setupInd := protocol.Setup_ind{}
+	b, err1, err2 := protocol.EncodeSetupInd(setupInd)
+	if err1 != nil || err2 != nil {
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while writing setupInd ", err)
+		return
+	}
 }
 
-//OnConnectAck sends to the underlying connection
-func (c *Client) OnConnectAck() {
-	panic("not implemented")
+func (c *Client) OnSetupFailed() {
+	//send with result 500
+}
+
+func (c *Client) OnGroupAttachAck() {
+	setupAck := protocol.Setup_ack{}
+	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
+	if err1 != nil || err2 != nil {
+		log.Println("Error encode setupack ", err1, err2)
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while writing groupAttachAck ", err)
+		return
+	}
+}
+
+func (c *Client) OnDisconnectAck() {
+	disconnectAck := protocol.Disconnect_ack{}
+	b, err1, err2 := protocol.EncodeDisconnectAck(disconnectAck)
+	if err1 != nil || err2 != nil {
+		log.Println("Error while writing disconnectAck ", err1, err2)
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while writing disconnectAck ", err)
+		return
+	}
+}
+
+func (c *Client) OnDisconnectInd() {
+	disconnectInd := protocol.Disconnect_ind{}
+	b, err1, err2 := protocol.EncodeDisconnectInd(disconnectInd)
+	if err1 != nil || err2 != nil {
+		log.Println("Error encode disconnect ind ", err1, err2)
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while writing disconnectInd ", err)
+		return
+	}
 }

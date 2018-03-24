@@ -5,7 +5,7 @@ const example = 1
 type Client interface {
 	Write([]byte) error
 	Listen()
-	OnTxInfoInd()
+	OnGroupAttachAck()
 	OnSetupAck(int, int)
 	OnSetupInd(int, int, int)
 	OnSetupFailed()
