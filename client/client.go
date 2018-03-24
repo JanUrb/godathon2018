@@ -102,8 +102,11 @@ func (c *Client) resolveMessageID(messageType string, payload []byte) {
 }
 
 //OnSetupAck sends to the underlying connection
-func (c *Client) OnSetupAck() {
-	setupAck := protocol.Setup_ack{}
+func (c *Client) OnSetupAck(result int, callID int) {
+	setupAck := protocol.Setup_ack{
+		Result:  result,
+		Call_id: callID,
+	}
 	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
 	if err1 != nil || err2 != nil {
 		return
@@ -116,8 +119,12 @@ func (c *Client) OnSetupAck() {
 }
 
 //OnSetupInd sends to the underlying connection
-func (c *Client) OnSetupInd() {
-	setupInd := protocol.Setup_ind{}
+func (c *Client) OnSetupInd(groupID, callID, clientID int) {
+	setupInd := protocol.Setup_ind{
+		Calling_id: groupID,
+		Call_id:    callID,
+		Called_id:  clientID,
+	}
 	b, err1, err2 := protocol.EncodeSetupInd(setupInd)
 	if err1 != nil || err2 != nil {
 		return
@@ -131,6 +138,17 @@ func (c *Client) OnSetupInd() {
 
 func (c *Client) OnSetupFailed() {
 	//send with result 500
+	setupAck := protocol.Setup_ack{417, 417}
+	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
+	if err1 != nil || err2 != nil {
+		log.Println("Error while sending onsetupfailed ", err1, err2)
+		return
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	if err != nil {
+		log.Println("Error while sending onsetupFailed ", err)
+		return
+	}
 }
 
 func (c *Client) OnGroupAttachAck() {
