@@ -12,4 +12,4 @@ type Protocol interface {
 
 type Web interface{}
 
-type Auth interface{}
+type Switching interface{}
