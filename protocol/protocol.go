@@ -78,92 +78,92 @@ type Tx_info_ind struct {
 	Talking_party_id int `json:"talkingPartyId"`
 }
 
-func DecodeRegisterReqPayload(payload []byte) Register_req_payload {
+func DecodeRegisterReqPayload(payload []byte) (Register_req_payload, error) {
 	var result Register_req_payload
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeRegisterAckPayload(payload []byte) Register_ack_payload {
+func DecodeRegisterAckPayload(payload []byte) (Register_ack_payload, error) {
 	var result Register_ack_payload
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeGroupAttachReq(payload []byte) Group_attach_req {
+func DecodeGroupAttachReq(payload []byte) (Group_attach_req, error) {
 	var result Group_attach_req
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeGroupAttachAck(payload []byte) Group_attach_ack {
+func DecodeGroupAttachAck(payload []byte) (Group_attach_ack, error) {
 	var result Group_attach_ack
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeSetupReq(payload []byte) Setup_req {
+func DecodeSetupReq(payload []byte) (Setup_req, error) {
 	var result Setup_req
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeSetupAck(payload []byte) Setup_ack {
+func DecodeSetupAck(payload []byte) (Setup_ack, error) {
 	var result Setup_ack
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeSetupInd(payload []byte) Setup_ind {
+func DecodeSetupInd(payload []byte) (Setup_ind, error) {
 	var result Setup_ind
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeSetupRes(payload []byte) Setup_res {
+func DecodeSetupRes(payload []byte) (Setup_res, error) {
 	var result Setup_res
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeConnectReq(payload []byte) Connect_req {
+func DecodeConnectReq(payload []byte) (Connect_req, error) {
 	var result Connect_req
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeConnectAck(payload []byte) Connect_ack {
+func DecodeConnectAck(payload []byte) (Connect_ack, error) {
 	var result Connect_ack
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeTxDemandReq(payload []byte) Tx_demand_req {
+func DecodeTxDemandReq(payload []byte) (Tx_demand_req, error) {
 	var result Tx_demand_req
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeTxDemandAck(payload []byte) Tx_demand_ack {
+func DecodeTxDemandAck(payload []byte) (Tx_demand_ack, error) {
 	var result Tx_demand_ack
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeTxCeasedReq(payload []byte) Tx_ceased_req {
+func DecodeTxCeasedReq(payload []byte) (Tx_ceased_req, error) {
 	var result Tx_ceased_req
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeTxCeasedAck(payload []byte) Tx_ceased_ack {
+func DecodeTxCeasedAck(payload []byte) (Tx_ceased_ack, error) {
 	var result Tx_ceased_ack
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
 
-func DecodeTxInfoInd(payload []byte) Tx_info_ind {
+func DecodeTxInfoInd(payload []byte) (Tx_info_ind, error) {
 	var result Tx_info_ind
-	json.Unmarshal(payload, &result)
-	return result
+	err := json.Unmarshal(payload, &result)
+	return result, err
 }
