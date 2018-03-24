@@ -37,6 +37,6 @@ func (web Web) registerClient(resWriter http.ResponseWriter, req *http.Request) 
 		return
 	}
 	// Spawn new client
-	client.New(web.Protocol, web.Switching, conn)
+	client.New(web.Switching, conn)
 	log.Printf("New client request [IP:%s]\t", conn.RemoteAddr().String())
 }
