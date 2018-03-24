@@ -20,6 +20,7 @@ type Client struct {
 
 var _ god.Client = &Client{} //compile time interface check
 
+//New returns a new instance of the Client struct.
 func New(protocol god.Protocol, switcher god.Switching, conn *websocket.Conn) *Client {
 	return &Client{
 		protocol,
@@ -28,6 +29,7 @@ func New(protocol god.Protocol, switcher god.Switching, conn *websocket.Conn) *C
 	}
 }
 
+//Listen starts listening for incomming data on the connection. Start as a goroutine!
 func (c *Client) Listen() {
 	for {
 		websocketMessageType, b, err := c.conn.ReadMessage()
@@ -44,6 +46,7 @@ func (c *Client) Listen() {
 	}
 }
 
+//Write writes data to the underlying websocket connection.
 func (c *Client) Write(data []byte) error {
 
 	err := c.conn.WriteMessage(websocket.TextMessage, data)
