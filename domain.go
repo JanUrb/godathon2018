@@ -4,6 +4,7 @@ const example = 1
 
 type Client interface {
 	Write([]byte) error
+	Listen()
 }
 
 type Protocol interface {
