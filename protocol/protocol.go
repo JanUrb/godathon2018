@@ -77,3 +77,93 @@ type Tx_info_ind struct {
 	Call_id          int `json:"callId"`
 	Talking_party_id int `json:"talkingPartyId"`
 }
+
+func DecodeRegisterReqPayload(payload []byte) Register_req_payload {
+	var result Register_req_payload
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeRegisterAckPayload(payload []byte) Register_ack_payload {
+	var result Register_ack_payload
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeGroupAttachReq(payload []byte) Group_attach_req {
+	var result Group_attach_req
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeGroupAttachAck(payload []byte) Group_attach_ack {
+	var result Group_attach_ack
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeSetupReq(payload []byte) Setup_req {
+	var result Setup_req
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeSetupAck(payload []byte) Setup_ack {
+	var result Setup_ack
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeSetupInd(payload []byte) Setup_ind {
+	var result Setup_ind
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeSetupRes(payload []byte) Setup_res {
+	var result Setup_res
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeConnectReq(payload []byte) Connect_req {
+	var result Connect_req
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeConnectAck(payload []byte) Connect_ack {
+	var result Connect_ack
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeTxDemandReq(payload []byte) Tx_demand_req {
+	var result Tx_demand_req
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeTxDemandAck(payload []byte) Tx_demand_ack {
+	var result Tx_demand_ack
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeTxCeasedReq(payload []byte) Tx_ceased_req {
+	var result Tx_ceased_req
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeTxCeasedAck(payload []byte) Tx_ceased_ack {
+	var result Tx_ceased_ack
+	json.Unmarshal(payload, &result)
+	return result
+}
+
+func DecodeTxInfoInd(payload []byte) Tx_info_ind {
+	var result Tx_info_ind
+	json.Unmarshal(payload, &result)
+	return result
+}
