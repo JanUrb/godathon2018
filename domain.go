@@ -5,6 +5,12 @@ const example = 1
 type Client interface {
 	Write([]byte) error
 	Listen()
+	OnTxCeasedAck()
+	OnTxInfoInd()
+	OnTxDemandAck()
+	OnSetupAck()
+	OnSetupInd()
+	OnConnectAck()
 }
 
 type Protocol interface {
@@ -16,5 +22,11 @@ type Web interface {
 }
 
 type Switching interface {
-	Call([]byte) error
+	Call([]byte, int)
+	AttachGroup(int, int, Client) error
+	DetachGroup(int, int) error
+	RequestTxCeased()
+	RequestTxDemand()
+	RequestSetup()
+	RequestConnect()
 }
