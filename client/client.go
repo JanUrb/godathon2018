@@ -97,7 +97,8 @@ func (c *Client) resolveMessageID(messageType string, payload []byte) {
 			log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
 			c.switcher.RequestSetup(0, 0)
 		}
-
+	default:
+		log.Println("Received unknown message")
 	}
 }
 
