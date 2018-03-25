@@ -69,6 +69,8 @@ func NewCall(callID int, groupID int) Call {
 	return c
 }
 
+var _ godathon2018.Switching = Switcher{} //compile time interface check
+
 //Switcher sucks
 type Switcher struct {
 	ongoingCalls map[int]Call
@@ -76,6 +78,7 @@ type Switcher struct {
 	clients      map[int]godathon2018.Client
 }
 
+//NewSwitcher returns an instance of a switcher
 func NewSwitcher() Switcher {
 	g := Switcher{
 		ongoingCalls: make(map[int]Call),
@@ -96,7 +99,7 @@ func (s Switcher) Call(voiceData []byte, groupID int) {
 }
 
 //AttachGroup attaches a client to a group
-func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Client) {
+func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Client) error {
 	fmt.Printf("Switching::AttachGroup groupID %d clientID %d\n", groupID, clientID)
 	if _, ok := s.groups[groupID]; ok {
 		// do nothing
@@ -105,13 +108,15 @@ func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Cli
 	}
 	s.clients[clientID] = client
 	s.groups[groupID].AddClient(clientID, client)
+	return nil
 }
 
 //DetachGroup detaches a client from a group
-func (s Switcher) DetachGroup(groupID int, clientID int) {
+func (s Switcher) DetachGroup(groupID int, clientID int) error {
 	fmt.Printf("Switching::DetachGroup groupID %d clientID %d\n", groupID, clientID)
 	delete(s.clients, clientID)
 	s.groups[groupID].RemoveClient(clientID)
+	return nil
 }
 
 //DisconnectRequest lol

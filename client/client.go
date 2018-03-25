@@ -53,6 +53,10 @@ func (c *Client) Listen() {
 		var genericMsg protocol.Generic_message
 		err = json.Unmarshal(b, &genericMsg)
 		if err != nil {
+			err = c.Write([]byte("error hallo"))
+			if err != nil {
+				log.Println("Error while writing error hello")
+			}
 			log.Printf("Error while reading generic message. (Client Id: %d, message: %s)", c.clientID, genericMsg)
 			continue // continue reading messages. No need to kill the client
 		}
@@ -108,11 +112,11 @@ func (c *Client) OnSetupAck(result int, callID int) {
 		Result:  result,
 		Call_id: callID,
 	}
-	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
-	if err1 != nil || err2 != nil {
+	b, err := protocol.EncodeSetupAck(setupAck)
+	if err != nil {
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while writing SetUpAckRequest ", err)
 		return
@@ -126,11 +130,11 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 		Call_id:    callID,
 		Called_id:  clientID,
 	}
-	b, err1, err2 := protocol.EncodeSetupInd(setupInd)
-	if err1 != nil || err2 != nil {
+	b, err := protocol.EncodeSetupInd(setupInd)
+	if err != nil {
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while writing setupInd ", err)
 		return
@@ -141,12 +145,12 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 func (c *Client) OnSetupFailed() {
 	//send with result 500
 	setupAck := protocol.Setup_ack{Result: 417, Call_id: 417}
-	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
-	if err1 != nil || err2 != nil {
-		log.Println("Error while sending onsetupfailed ", err1, err2)
+	b, err := protocol.EncodeSetupAck(setupAck)
+	if err != nil {
+		log.Println("Error while sending onsetupfailed ", err)
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while sending onsetupFailed ", err)
 		return
@@ -156,12 +160,12 @@ func (c *Client) OnSetupFailed() {
 //OnGroupAttachAck sends an groupattachack
 func (c *Client) OnGroupAttachAck() {
 	setupAck := protocol.Setup_ack{}
-	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
-	if err1 != nil || err2 != nil {
-		log.Println("Error encode setupack ", err1, err2)
+	b, err := protocol.EncodeSetupAck(setupAck)
+	if err != nil {
+		log.Println("Error encode setupack ", err)
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while writing groupAttachAck ", err)
 		return
@@ -171,12 +175,12 @@ func (c *Client) OnGroupAttachAck() {
 //OnDisconnectAck sends a disconnectAck
 func (c *Client) OnDisconnectAck() {
 	disconnectAck := protocol.Disconnect_ack{}
-	b, err1, err2 := protocol.EncodeDisconnectAck(disconnectAck)
-	if err1 != nil || err2 != nil {
-		log.Println("Error while writing disconnectAck ", err1, err2)
+	b, err := protocol.EncodeDisconnectAck(disconnectAck)
+	if err != nil {
+		log.Println("Error while writing disconnectAck ", err)
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while writing disconnectAck ", err)
 		return
@@ -186,12 +190,12 @@ func (c *Client) OnDisconnectAck() {
 //OnDisconnectInd sends a disconnectInd
 func (c *Client) OnDisconnectInd() {
 	disconnectInd := protocol.Disconnect_ind{}
-	b, err1, err2 := protocol.EncodeDisconnectInd(disconnectInd)
-	if err1 != nil || err2 != nil {
-		log.Println("Error encode disconnect ind ", err1, err2)
+	b, err := protocol.EncodeDisconnectInd(disconnectInd)
+	if err != nil {
+		log.Println("Error encode disconnect ind ", err)
 		return
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, b)
+	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		log.Println("Error while writing disconnectInd ", err)
 		return

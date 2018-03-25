@@ -12,8 +12,7 @@ import (
 
 // Web - Struct for web specific things?
 type Web struct {
-	god.Protocol
-	god.Switching
+	Switcher god.Switching
 }
 
 var upgrader = websocket.Upgrader{
@@ -28,6 +27,9 @@ var upgrader = websocket.Upgrader{
 // Run Websocket server to allow client registrations
 func (web Web) Run() {
 	log.Println("Starting webserver")
+	http.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello websocket, use this to open a console baby"))
+	})
 	http.HandleFunc("/", web.registerClient)
 	log.Println("Waiting for connections")
 	log.Fatal(http.ListenAndServe(":4242", nil))
@@ -40,7 +42,7 @@ func (web Web) registerClient(resWriter http.ResponseWriter, req *http.Request) 
 		return
 	}
 	// Spawn new client
-	c := client.New(nil, conn)
+	c := client.New(web.Switcher, conn)
 	go c.Listen()
 	log.Printf("New client request [IP:%s]\t", conn.RemoteAddr().String())
 }

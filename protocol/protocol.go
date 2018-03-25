@@ -73,103 +73,126 @@ type Disconnect_ind struct {
 	Call_id int `json:"callId"`
 }
 
-func EncodeRegisterReq(data Register_req) ([]byte, error, error) {
+func EncodeRegisterReq(data Register_req) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_register_req
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeRegisterAck(data Register_ack) ([]byte, error, error) {
+func EncodeRegisterAck(data Register_ack) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_register_ack
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeGroupAttachReq(data Group_attach_req) ([]byte, error, error) {
+func EncodeGroupAttachReq(data Group_attach_req) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_groupAttach_req
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeGroupAttachAck(data Group_attach_ack) ([]byte, error, error) {
+func EncodeGroupAttachAck(data Group_attach_ack) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_groupAttach_ack
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeSetupReq(data Setup_req) ([]byte, error, error) {
+func EncodeSetupReq(data Setup_req) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_setup_req
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeSetupAck(data Setup_ack) ([]byte, error, error) {
+func EncodeSetupAck(data Setup_ack) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_setup_ack
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeSetupInd(data Setup_ind) ([]byte, error, error) {
+func EncodeSetupInd(data Setup_ind) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_setup_ind
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeSetupRes(data Setup_res) ([]byte, error, error) {
+func EncodeSetupRes(data Setup_res) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_setup_res
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeDisconnectReq(data Disconnect_req) ([]byte, error, error) {
+func EncodeDisconnectReq(data Disconnect_req) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_disconnect_req
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeDisconnectAck(data Disconnect_ack) ([]byte, error, error) {
+func EncodeDisconnectAck(data Disconnect_ack) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_disconnect_ack
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
 }
 
-func EncodeDisconnectInd(data Disconnect_ind) ([]byte, error, error) {
+func EncodeDisconnectInd(data Disconnect_ind) ([]byte, error) {
 	var msgStruct Generic_message
 	msgStruct.Msg_type = MessageType_disconnect_ind
-	payload, err1 := json.Marshal(data)
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
 	msgStruct.Payload = payload
-	msg, err2 := json.Marshal(msgStruct)
-	return msg, err1, err2
+	return json.Marshal(msgStruct)
+
 }
 
 func DecodeRegisterReq(payload []byte) (Register_req, error) {
