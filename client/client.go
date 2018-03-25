@@ -137,9 +137,10 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 	}
 }
 
+//OnSetupFailed sends a SetupAck with error code
 func (c *Client) OnSetupFailed() {
 	//send with result 500
-	setupAck := protocol.Setup_ack{417, 417}
+	setupAck := protocol.Setup_ack{Result: 417, Call_id: 417}
 	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
 	if err1 != nil || err2 != nil {
 		log.Println("Error while sending onsetupfailed ", err1, err2)
@@ -152,6 +153,7 @@ func (c *Client) OnSetupFailed() {
 	}
 }
 
+//OnGroupAttachAck sends an groupattachack
 func (c *Client) OnGroupAttachAck() {
 	setupAck := protocol.Setup_ack{}
 	b, err1, err2 := protocol.EncodeSetupAck(setupAck)
@@ -166,6 +168,7 @@ func (c *Client) OnGroupAttachAck() {
 	}
 }
 
+//OnDisconnectAck sends a disconnectAck
 func (c *Client) OnDisconnectAck() {
 	disconnectAck := protocol.Disconnect_ack{}
 	b, err1, err2 := protocol.EncodeDisconnectAck(disconnectAck)
@@ -180,6 +183,7 @@ func (c *Client) OnDisconnectAck() {
 	}
 }
 
+//OnDisconnectInd sends a disconnectInd
 func (c *Client) OnDisconnectInd() {
 	disconnectInd := protocol.Disconnect_ind{}
 	b, err1, err2 := protocol.EncodeDisconnectInd(disconnectInd)
