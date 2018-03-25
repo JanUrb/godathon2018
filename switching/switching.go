@@ -14,7 +14,7 @@ type Group struct {
 	clients map[int]godathon2018.Client
 }
 
-//New instance of a group
+//NewGroup returns an instance of a group
 func NewGroup() *Group {
 	g := &Group{
 		clients: make(map[int]godathon2018.Client),
@@ -22,26 +22,31 @@ func NewGroup() *Group {
 	return g
 }
 
+//AddClient adds a client.
 func (g *Group) AddClient(clientID int, client godathon2018.Client) {
 	fmt.Printf("Group::AddClient clientID %d\n", clientID)
 	g.clients[clientID] = client
 }
 
+//RemoveClient removes a client
 func (g *Group) RemoveClient(clientID int) {
 	fmt.Printf("Group::RemoveClient clientID %d\n", clientID)
 	delete(g.clients, clientID)
 }
 
+//SetTalkingParty sets the talking party of a group
 func (g *Group) SetTalkingParty(clientID int) {
 	fmt.Printf("Group::SetTalkingParty clientID %d\n", clientID)
 	g.talker = clientID
 }
 
+//GetTalkingParty returns the current talking party
 func (g *Group) GetTalkingParty() int {
 	fmt.Printf("Group::SetTalkingParty talker %d\n", g.talker)
 	return g.talker
 }
 
+//GetCalledClients returns the clients that are currently called
 func (g *Group) GetCalledClients() map[int]godathon2018.Client {
 	// create a new map we can copy clients to
 	var calledClients = make(map[int]godathon2018.Client)
@@ -74,7 +79,7 @@ var _ godathon2018.Switching = Switcher{} //compile time interface check
 //Switcher sucks
 type Switcher struct {
 	ongoingCalls map[int]Call
-	groups       map[int]Group
+	groups       map[int]*Group
 	clients      map[int]godathon2018.Client
 }
 
@@ -82,7 +87,7 @@ type Switcher struct {
 func NewSwitcher() Switcher {
 	g := Switcher{
 		ongoingCalls: make(map[int]Call),
-		groups:       make(map[int]Group),
+		groups:       make(map[int]*Group),
 		clients:      make(map[int]godathon2018.Client),
 	}
 	return g
