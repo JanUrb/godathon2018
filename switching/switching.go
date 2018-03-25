@@ -15,34 +15,34 @@ type Group struct {
 }
 
 //New instance of a group
-func NewGroup() Group {
-	g := Group{
+func NewGroup() *Group {
+	g := &Group{
 		clients: make(map[int]godathon2018.Client),
 	}
 	return g
 }
 
-func (g Group) AddClient(clientID int, client godathon2018.Client) {
+func (g *Group) AddClient(clientID int, client godathon2018.Client) {
 	fmt.Printf("Group::AddClient clientID %d\n", clientID)
 	g.clients[clientID] = client
 }
 
-func (g Group) RemoveClient(clientID int) {
+func (g *Group) RemoveClient(clientID int) {
 	fmt.Printf("Group::RemoveClient clientID %d\n", clientID)
 	delete(g.clients, clientID)
 }
 
-func (g Group) SetTalkingParty(clientID int) {
+func (g *Group) SetTalkingParty(clientID int) {
 	fmt.Printf("Group::SetTalkingParty clientID %d\n", clientID)
 	g.talker = clientID
 }
 
-func (g Group) GetTalkingParty() int {
+func (g *Group) GetTalkingParty() int {
 	fmt.Printf("Group::SetTalkingParty talker %d\n", g.talker)
 	return g.talker
 }
 
-func (g Group) GetCalledClients() map[int]godathon2018.Client {
+func (g *Group) GetCalledClients() map[int]godathon2018.Client {
 	// create a new map we can copy clients to
 	var calledClients = make(map[int]godathon2018.Client)
 	// create a copy of the original map
