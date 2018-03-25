@@ -22,7 +22,7 @@ type Generic_message struct {
 }
 
 type Register_req struct {
-	User int `json:"user"`
+	User string `json:"user"`
 }
 
 type Register_ack struct {

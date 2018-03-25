@@ -17,10 +17,12 @@ var (
 
 //Client represents a websocket client.
 type Client struct {
-	clientID int
-	groupID  int
-	switcher god.Switching
-	conn     *websocket.Conn //gorilla/websocket uses pointer types for connection
+	clientID                 int
+	groupID                  int
+	userName                 string
+	clientHasConnectedBefore bool
+	switcher                 god.Switching
+	conn                     *websocket.Conn //gorilla/websocket uses pointer types for connection
 }
 
 var _ god.Client = (*Client)(nil) //compile time interface check
@@ -35,33 +37,49 @@ func New(switcher god.Switching, conn *websocket.Conn) *Client {
 
 //Listen starts listening for incomming data on the connection. Start as a goroutine!
 func (c *Client) Listen() {
+	defer func() {
+		err := c.conn.Close()
+		if err != nil {
+			log.Println("Error while closing websocket")
+		}
+	}()
 	for {
+		if !c.clientHasConnectedBefore {
+			log.Println("Sending hello to client")
+			err := c.Write([]byte("hello"))
+			if err != nil {
+				log.Println("Error while writing to client ", err)
+				return
+			}
+			c.clientHasConnectedBefore = true
+		}
 		websocketMessageType, b, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Println("Error while reading message from connection. ", err)
-			err = c.switcher.DetachGroup(c.groupID, c.clientID)
-			if err != nil {
-				log.Println("Error while detaching from group: ", c.groupID, " with client: ", c.clientID)
-				return
-			}
+			// err = c.switcher.DetachGroup(c.groupID, c.clientID)
+			// if err != nil {
+			// 	log.Println("Error while detaching from group: ", c.groupID, " with client: ", c.clientID)
+			// 	return
+			// }
 			return
 		}
 
-		log.Println("Message type: ", websocketMessageType)
+		log.Println("WS Message type: ", websocketMessageType)
 		//TODO protocol decode message
 
 		var genericMsg protocol.Generic_message
 		err = json.Unmarshal(b, &genericMsg)
 		if err != nil {
-			err = c.Write([]byte("error hallo"))
 			if err != nil {
 				log.Println("Error while writing error hello")
 			}
-			log.Printf("Error while reading generic message. (Client Id: %d, message: %s)", c.clientID, genericMsg)
+			log.Println("Error reading generic message: ", err)
+			log.Printf("Error while reading generic message. (Client Id: %d, message: %s )", c.clientID, genericMsg)
 			continue // continue reading messages. No need to kill the client
 		}
 
 		log.Println("Message content: ", b)
+		log.Println("Msg Type: ", genericMsg.Msg_type)
 		c.resolveMessageID(genericMsg.Msg_type, genericMsg.Payload)
 	}
 }
@@ -78,6 +96,18 @@ func (c *Client) Write(data []byte) error {
 
 func (c *Client) resolveMessageID(messageType string, payload []byte) {
 	switch messageType {
+	case protocol.MessageType_register_req:
+		{
+			{
+				req, err := protocol.DecodeRegisterReq(payload)
+				if err != nil {
+					log.Println("Could not decode registerRequest: ", err)
+					return
+				}
+				c.userName = req.User
+				c.SendRegisterAck()
+			}
+		}
 	case protocol.MessageType_groupAttach_req:
 		{
 			req, err := protocol.DecodeGroupAttachReq(payload)
@@ -103,6 +133,22 @@ func (c *Client) resolveMessageID(messageType string, payload []byte) {
 		}
 	default:
 		log.Println("Received unknown message")
+	}
+}
+
+//SendRegisterAck sends a register ack.
+func (c *Client) SendRegisterAck() {
+	var registerAck protocol.Register_ack
+	registerAck.Result = 200
+	b, err := protocol.EncodeRegisterAck(registerAck)
+	if err != nil {
+		log.Println("Failed to encode register ack")
+		return
+	}
+	err = c.Write(b)
+	if err != nil {
+		log.Println("Failed to write to user")
+		return
 	}
 }
 
