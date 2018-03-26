@@ -3,11 +3,11 @@ package client
 import (
 	"encoding/json"
 	"errors"
-	"log"
 
 	god "github.com/JanUrb/godathon2018"
 	"github.com/JanUrb/godathon2018/protocol"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -17,21 +17,23 @@ var (
 
 //Client represents a websocket client.
 type Client struct {
-	clientID                 int
-	groupID                  int
-	userName                 string
-	clientHasConnectedBefore bool
-	switcher                 god.Switching
-	conn                     *websocket.Conn //gorilla/websocket uses pointer types for connection
+	clientID int
+	groupID  int
+	userName string
+	switcher god.Switching
+	conn     *websocket.Conn
+	log      *logrus.Entry
 }
 
 var _ god.Client = (*Client)(nil) //compile time interface check
 
 //New returns a new instance of the Client struct.
 func New(switcher god.Switching, conn *websocket.Conn) *Client {
+	log := logrus.New().WithField("clientIP: ", conn.RemoteAddr().String())
 	return &Client{
 		switcher: switcher,
 		conn:     conn,
+		log:      log,
 	}
 }
 
@@ -40,22 +42,13 @@ func (c *Client) Listen() {
 	defer func() {
 		err := c.conn.Close()
 		if err != nil {
-			log.Println("Error while closing websocket")
+			c.log.Warnln("Error while closing websocket")
 		}
 	}()
 	for {
-		if !c.clientHasConnectedBefore {
-			log.Println("Sending hello to client")
-			err := c.Write([]byte("hello"))
-			if err != nil {
-				log.Println("Error while writing to client ", err)
-				return
-			}
-			c.clientHasConnectedBefore = true
-		}
-		websocketMessageType, b, err := c.conn.ReadMessage()
+		_, b, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println("Error while reading message from connection. ", err)
+			c.log.Warnln("Error while reading message from connection. ", err)
 			// err = c.switcher.DetachGroup(c.groupID, c.clientID)
 			// if err != nil {
 			// 	log.Println("Error while detaching from group: ", c.groupID, " with client: ", c.clientID)
@@ -64,23 +57,19 @@ func (c *Client) Listen() {
 			return
 		}
 
-		log.Println("WS Message type: ", websocketMessageType)
-		//TODO protocol decode message
-
 		var genericMsg protocol.Generic_message
 		err = json.Unmarshal(b, &genericMsg)
 		if err != nil {
 			if err != nil {
-				log.Println("Error while writing error hello")
+				c.log.Warnln("Error while writing error hello")
 			}
-			log.Println("Error reading generic message: ", err)
-			log.Printf("Error while reading generic message. (Client Id: %d, message: %s )", c.clientID, genericMsg)
+			c.log.Warnln("Error reading generic message: ", err)
+			c.log.Errorf("Error while reading generic message. (Client Id: %d, message: %s )", c.clientID, genericMsg)
 			continue // continue reading messages. No need to kill the client
 		}
 
-		log.Println("Message content: ", b)
-		log.Println("Msg Type: ", genericMsg.Msg_type)
-		c.resolveMessageID(genericMsg.Msg_type, genericMsg.Payload)
+		c.log.Println("Msg Type:", genericMsg.Msg_type)
+		c.handleMessage(genericMsg.Msg_type, genericMsg.Payload)
 	}
 }
 
@@ -94,30 +83,31 @@ func (c *Client) Write(data []byte) error {
 	return nil
 }
 
-func (c *Client) resolveMessageID(messageType string, payload []byte) {
+func (c *Client) handleMessage(messageType string, payload []byte) {
 	switch messageType {
 	case protocol.MessageType_register_req:
 		{
-			{
-				req, err := protocol.DecodeRegisterReq(payload)
-				if err != nil {
-					log.Println("Could not decode registerRequest: ", err)
-					return
-				}
-				c.userName = req.User
-				c.SendRegisterAck()
+
+			req, err := protocol.DecodeRegisterReq(payload)
+			if err != nil {
+				c.log.Warnln("Could not decode registerRequest: ", err)
+				return
 			}
+			c.userName = req.User
+			c.switcher.AttachGroup(0, 0, c)
+			c.SendRegisterAck()
+
 		}
 	case protocol.MessageType_groupAttach_req:
 		{
 			req, err := protocol.DecodeGroupAttachReq(payload)
 			if err != nil {
-				log.Println("Could not decode group attach req ", payload)
+				c.log.Warnln("Could not decode group attach req ", payload)
 				return
 			}
 			err = c.switcher.AttachGroup(req.Id, 0, c)
 			if err != nil {
-				log.Println("Error while attaching to group ")
+				c.log.Warnln("Error while attaching to group ")
 				return
 			}
 		}
@@ -125,14 +115,24 @@ func (c *Client) resolveMessageID(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeSetupReq(payload)
 			if err != nil {
-				log.Println("Error decide setup req")
+				c.log.Warnln("Error deciode setup req")
 				return
 			}
-			log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
+			c.log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
 			c.switcher.RequestSetup(0, 0)
 		}
+	case protocol.MessageType_disconnect_req:
+		{
+			req, err := protocol.DecodeDisconnectReq(payload)
+			if err != nil {
+				c.log.Warnln("Error decoding disconnect request")
+				return
+			}
+			c.log.Println("Disconnecting call: ", req.Call_id)
+			c.switcher.DisconnectRequest(c.clientID, c.groupID)
+		}
 	default:
-		log.Println("Received unknown message")
+		c.log.Println("Received unknown message:", messageType)
 	}
 }
 
@@ -142,12 +142,12 @@ func (c *Client) SendRegisterAck() {
 	registerAck.Result = 200
 	b, err := protocol.EncodeRegisterAck(registerAck)
 	if err != nil {
-		log.Println("Failed to encode register ack")
+		c.log.Warnln("Failed to encode register ack")
 		return
 	}
 	err = c.Write(b)
 	if err != nil {
-		log.Println("Failed to write to user")
+		c.log.Warnln("Failed to write to user")
 		return
 	}
 }
@@ -164,7 +164,7 @@ func (c *Client) OnSetupAck(result int, callID int) {
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while writing SetUpAckRequest ", err)
+		c.log.Warnln("Error while writing SetUpAckRequest ", err)
 		return
 	}
 }
@@ -182,7 +182,7 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while writing setupInd ", err)
+		c.log.Warnln("Error while writing setupInd ", err)
 		return
 	}
 }
@@ -193,12 +193,12 @@ func (c *Client) OnSetupFailed() {
 	setupAck := protocol.Setup_ack{Result: 417, Call_id: 417}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
-		log.Println("Error while sending onsetupfailed ", err)
+		c.log.Warnln("Error while sending onsetupfailed ", err)
 		return
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while sending onsetupFailed ", err)
+		c.log.Warnln("Error while sending onsetupFailed ", err)
 		return
 	}
 }
@@ -208,12 +208,12 @@ func (c *Client) OnGroupAttachAck() {
 	setupAck := protocol.Setup_ack{}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
-		log.Println("Error encode setupack ", err)
+		c.log.Warnln("Error encode setupack ", err)
 		return
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while writing groupAttachAck ", err)
+		c.log.Warnln("Error while writing groupAttachAck ", err)
 		return
 	}
 }
@@ -223,12 +223,12 @@ func (c *Client) OnDisconnectAck() {
 	disconnectAck := protocol.Disconnect_ack{}
 	b, err := protocol.EncodeDisconnectAck(disconnectAck)
 	if err != nil {
-		log.Println("Error while writing disconnectAck ", err)
+		c.log.Warnln("Error while writing disconnectAck ", err)
 		return
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while writing disconnectAck ", err)
+		c.log.Warnln("Error while writing disconnectAck ", err)
 		return
 	}
 }
@@ -238,12 +238,12 @@ func (c *Client) OnDisconnectInd() {
 	disconnectInd := protocol.Disconnect_ind{}
 	b, err := protocol.EncodeDisconnectInd(disconnectInd)
 	if err != nil {
-		log.Println("Error encode disconnect ind ", err)
+		c.log.Warnln("Error encode disconnect ind ", err)
 		return
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		log.Println("Error while writing disconnectInd ", err)
+		c.log.Warnln("Error while writing disconnectInd ", err)
 		return
 	}
 }

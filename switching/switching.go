@@ -1,48 +1,51 @@
 package switching
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/JanUrb/godathon2018"
 )
 
 var callIDCounter = 0
+var log = logrus.WithField("component", "switching")
 
 //Group sucks
 type Group struct {
-	talker  int
-	clients map[int]godathon2018.Client
+	talker      int
+	clients     map[int]godathon2018.Client
+	groupLogger *logrus.Entry
 }
 
 //NewGroup returns an instance of a group
 func NewGroup() *Group {
 	g := &Group{
-		clients: make(map[int]godathon2018.Client),
+		clients:     make(map[int]godathon2018.Client),
+		groupLogger: log.WithField("subcomponent", "group"),
 	}
 	return g
 }
 
 //AddClient adds a client.
 func (g *Group) AddClient(clientID int, client godathon2018.Client) {
-	fmt.Printf("Group::AddClient clientID %d\n", clientID)
+	g.groupLogger.Infoln("AddClient clientID", clientID)
 	g.clients[clientID] = client
 }
 
 //RemoveClient removes a client
 func (g *Group) RemoveClient(clientID int) {
-	fmt.Printf("Group::RemoveClient clientID %d\n", clientID)
+	g.groupLogger.Infoln("RemoveClient clientID", clientID)
 	delete(g.clients, clientID)
 }
 
 //SetTalkingParty sets the talking party of a group
 func (g *Group) SetTalkingParty(clientID int) {
-	fmt.Printf("Group::SetTalkingParty clientID %d\n", clientID)
+	g.groupLogger.Infoln("SetTalkingParty clientID", clientID)
 	g.talker = clientID
 }
 
 //GetTalkingParty returns the current talking party
 func (g *Group) GetTalkingParty() int {
-	fmt.Printf("Group::SetTalkingParty talker %d\n", g.talker)
+	g.groupLogger.Infoln("SetTalkingParty talker", g.talker)
 	return g.talker
 }
 
@@ -51,8 +54,8 @@ func (g *Group) GetCalledClients() map[int]godathon2018.Client {
 	// create a new map we can copy clients to
 	var calledClients = make(map[int]godathon2018.Client)
 	// create a copy of the original map
-	for clientId, client := range g.clients {
-		calledClients[clientId] = client
+	for clientID, client := range g.clients {
+		calledClients[clientID] = client
 	}
 	// remove the callee from list
 	delete(calledClients, g.GetTalkingParty())
@@ -95,7 +98,7 @@ func NewSwitcher() Switcher {
 
 //Call distributes voice data to all called partys
 func (s Switcher) Call(voiceData []byte, groupID int) {
-	fmt.Printf("Switching::Call groupID %d\n", groupID)
+	log.Infof("Call groupID %d", groupID)
 	var group = s.groups[groupID]
 	var calledClients = group.GetCalledClients()
 	for _, client := range calledClients {
@@ -105,7 +108,7 @@ func (s Switcher) Call(voiceData []byte, groupID int) {
 
 //AttachGroup attaches a client to a group
 func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Client) error {
-	fmt.Printf("Switching::AttachGroup groupID %d clientID %d\n", groupID, clientID)
+	log.Infof("AttachGroup groupID %d clientID %d", groupID, clientID)
 	if _, ok := s.groups[groupID]; ok {
 		// do nothing
 	} else {
@@ -118,7 +121,7 @@ func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Cli
 
 //DetachGroup detaches a client from a group
 func (s Switcher) DetachGroup(groupID int, clientID int) error {
-	fmt.Printf("Switching::DetachGroup groupID %d clientID %d\n", groupID, clientID)
+	log.Infof("DetachGroup groupID %d clientID %d", groupID, clientID)
 	delete(s.clients, clientID)
 	s.groups[groupID].RemoveClient(clientID)
 	return nil
@@ -126,7 +129,7 @@ func (s Switcher) DetachGroup(groupID int, clientID int) error {
 
 //DisconnectRequest lol
 func (s Switcher) DisconnectRequest(groupID int, clientID int) {
-	fmt.Printf("Switching::DisconnectRequest groupID %d clientID %d\n", groupID, clientID)
+	log.Infof("DisconnectRequest groupID %d clientID %d", groupID, clientID)
 	// TODO check if ongoing call exists
 	var group = s.groups[groupID]
 	client := s.clients[group.GetTalkingParty()]
@@ -142,7 +145,7 @@ func (s Switcher) DisconnectRequest(groupID int, clientID int) {
 
 //RequestSetup bla
 func (s Switcher) RequestSetup(groupID int, clientID int) {
-	fmt.Printf("Switching::RequestSetup groupID %d clientID %d\n", groupID, clientID)
+	log.Infof("RequestSetup groupID %d clientID %d", groupID, clientID)
 	callIDCounter++
 	client := s.clients[clientID]
 	if _, ok := s.ongoingCalls[groupID]; ok {
