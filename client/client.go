@@ -29,7 +29,10 @@ var _ god.Client = (*Client)(nil) //compile time interface check
 
 //New returns a new instance of the Client struct.
 func New(switcher god.Switching, conn *websocket.Conn) *Client {
-	log := logrus.New().WithField("clientIP: ", conn.RemoteAddr().String())
+	log := logrus.New().WithFields(logrus.Fields{
+		"component":  "client",
+		"clientIP: ": conn.RemoteAddr().String(),
+	})
 	return &Client{
 		switcher: switcher,
 		conn:     conn,
@@ -60,9 +63,6 @@ func (c *Client) Listen() {
 		var genericMsg protocol.Generic_message
 		err = json.Unmarshal(b, &genericMsg)
 		if err != nil {
-			if err != nil {
-				c.log.Warnln("Error while writing error hello")
-			}
 			c.log.Warnln("Error reading generic message: ", err)
 			c.log.Errorf("Error while reading generic message. (Client Id: %d, message: %s )", c.clientID, genericMsg)
 			continue // continue reading messages. No need to kill the client
@@ -102,12 +102,14 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeGroupAttachReq(payload)
 			if err != nil {
-				c.log.Warnln("Could not decode group attach req ", payload)
+				c.log.Warnln("Could not decode group attach req", err)
 				return
 			}
-			err = c.switcher.AttachGroup(req.Id, 0, c)
+			c.log.Info("Attaching to group: ", req.ID)
+			c.log.Warnln("Ignoring call to attach group because of not having fixed types of json payloads.")
+			// err = c.switcher.AttachGroup(req.ID, 0, c)
 			if err != nil {
-				c.log.Warnln("Error while attaching to group ")
+				c.log.Warnln("Error while attaching to group ", err)
 				return
 			}
 		}
@@ -115,7 +117,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeSetupReq(payload)
 			if err != nil {
-				c.log.Warnln("Error deciode setup req")
+				c.log.Warnln("Error deciode setup req", err)
 				return
 			}
 			c.log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
@@ -125,7 +127,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeDisconnectReq(payload)
 			if err != nil {
-				c.log.Warnln("Error decoding disconnect request")
+				c.log.Warnln("Error decoding disconnect request", err)
 				return
 			}
 			c.log.Println("Disconnecting call: ", req.Call_id)

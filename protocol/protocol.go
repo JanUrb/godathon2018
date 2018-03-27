@@ -30,7 +30,7 @@ type Register_ack struct {
 }
 
 type Group_attach_req struct {
-	Id int `json:"id"`
+	ID int `json:"id"`
 }
 
 type Group_attach_ack struct {

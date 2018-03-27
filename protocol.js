@@ -15,7 +15,7 @@ let register_ack = {
 let groupAttach_req = {
   type: "groupAttach_req",
   payload: {
-    id: 9876
+    id: "9876"
   }
 };
 
