@@ -1,0 +1,3 @@
+[submodule "static/voipathon"]
+	path = static/voipathon
+	url = https://github.com/JanUrb/voipathon
