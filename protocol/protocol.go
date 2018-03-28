@@ -30,47 +30,44 @@ type Register_ack struct {
 }
 
 type Group_attach_req struct {
-	ID int `json:"id"`
+	GroupID int `json:"groupId"`
 }
 
 type Group_attach_ack struct {
-	Id     int `json:"id"`
-	Result int `json:"result"`
+	GroupID int `json:"groupId"`
+	Result  int `json:"result"`
 }
 
 type Setup_req struct {
-	Call_type string `json:"callType"`
-	Called_id int    `json:"calledId"`
+	GroupID int `json:"groupId"`
 }
 
 type Setup_ack struct {
 	Result  int `json:"result"`
-	Call_id int `json:"callId"`
+	GroupID int `json:"groupId"`
 }
 
 type Setup_ind struct {
-	Call_type  string `json:"callType"`
-	Called_id  int    `json:"calledId"`
-	Calling_id int    `json:"callingId"`
-	Call_id    int    `json:"callId"`
+	CalleeID int `json:"calleeId"`
+	GroupID  int `json:"groupId"`
 }
 
 type Setup_res struct {
 	Result  int `json:"result"`
-	Call_id int `json:"callId"`
+	GroupID int `json:"callId"`
 }
 
 type Disconnect_req struct {
-	Call_id int `json:"callId"`
+	GroupID int `json:"callId"`
 }
 
 type Disconnect_ack struct {
 	Result  int `json:"result"`
-	Call_id int `json:"callId"`
+	GroupID int `json:"callId"`
 }
 
 type Disconnect_ind struct {
-	Call_id int `json:"callId"`
+	GroupID int `json:"callId"`
 }
 
 func EncodeRegisterReq(data Register_req) ([]byte, error) {

@@ -9,7 +9,8 @@ import (
 var callIDCounter = 0
 var log = logrus.WithField("component", "switching")
 
-//Group sucks
+//Group represents a group. There can only be one Call per group and a user can only be in one group.
+//Therefore talker is sufficient to identify a call.
 type Group struct {
 	talker      int
 	clients     map[int]godathon2018.Client
@@ -19,6 +20,7 @@ type Group struct {
 //NewGroup returns an instance of a group
 func NewGroup() *Group {
 	g := &Group{
+		talker:      -1,
 		clients:     make(map[int]godathon2018.Client),
 		groupLogger: log.WithField("subcomponent", "group"),
 	}
@@ -63,35 +65,19 @@ func (g *Group) GetCalledClients() map[int]godathon2018.Client {
 	return calledClients
 }
 
-type Call struct {
-	callID  int
-	groupID int
-}
-
-//NewCall instance of a call
-func NewCall(callID int, groupID int) Call {
-	c := Call{
-		callID:  callID,
-		groupID: groupID,
-	}
-	return c
-}
-
 var _ godathon2018.Switching = Switcher{} //compile time interface check
 
 //Switcher sucks
 type Switcher struct {
-	ongoingCalls map[int]Call
-	groups       map[int]*Group
-	clients      map[int]godathon2018.Client
+	groups  map[int]*Group
+	clients map[int]godathon2018.Client
 }
 
 //NewSwitcher returns an instance of a switcher
 func NewSwitcher() Switcher {
 	g := Switcher{
-		ongoingCalls: make(map[int]Call),
-		groups:       make(map[int]*Group),
-		clients:      make(map[int]godathon2018.Client),
+		groups:  make(map[int]*Group),
+		clients: make(map[int]godathon2018.Client),
 	}
 	return g
 }
@@ -140,32 +126,38 @@ func (s Switcher) DisconnectRequest(groupID int, clientID int) {
 	for _, client := range calledClients {
 		client.OnDisconnectInd()
 	}
-	// remove call from map
-	delete(s.ongoingCalls, groupID)
 }
 
 //RequestSetup bla
 func (s Switcher) RequestSetup(groupID int, clientID int) {
 	log.Infof("RequestSetup groupID %d clientID %d", groupID, clientID)
-	callIDCounter++
+
 	client, ok := s.clients[clientID]
 	if !ok {
 		log.Warnln("No client with id ", clientID, " found in currently saved clients")
 		return
 	}
-	if _, ok := s.ongoingCalls[groupID]; ok {
+	group, ok := s.groups[groupID]
+	if !ok {
+		log.Infoln("No group with id ", groupID, " found in currently saved groups")
+		group = NewGroup()
+		s.groups[groupID] = group
+		log.Infoln("New group with id ", groupID, " created")
+	}
+
+	currentTalker := group.GetTalkingParty()
+
+	if currentTalker != -1 {
 		client.OnSetupFailed()
-	} else {
-		call := NewCall(callIDCounter, groupID)
-		s.ongoingCalls[call.groupID] = call
-		var group = s.groups[groupID]
-		group.SetTalkingParty(clientID)
-		// inform calling party about call setup
-		client.OnSetupAck(200, call.callID)
-		// inform called partys about call setup
-		var calledClients = group.GetCalledClients()
-		for clientID, client := range calledClients {
-			client.OnSetupInd(groupID, clientID, call.callID)
-		}
+		return
+	}
+
+	group.SetTalkingParty(clientID)
+	// inform calling party about call setup
+	client.OnSetupAck(200, groupID)
+	// inform called partys about call setup
+	for clientID, client := range group.GetCalledClients() {
+		client.OnSetupInd(groupID, clientID)
+
 	}
 }

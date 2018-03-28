@@ -118,8 +118,8 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				c.receiveLogger.Warnln("Could not decode group attach req", err)
 				return
 			}
-			c.receiveLogger.Info("Attaching to group: ", req.ID)
-			err = c.switcher.AttachGroup(req.ID, c.clientID, c)
+			c.receiveLogger.Info("Attaching to group: ", req.GroupID)
+			err = c.switcher.AttachGroup(req.GroupID, c.clientID, c)
 			if err != nil {
 				c.receiveLogger.Warnln("Error while attaching to group ", err)
 				return
@@ -132,8 +132,8 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				c.log.Warnln("Error decode setup req", err)
 				return
 			}
-			c.receiveLogger.Println("Decode setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
-			c.switcher.RequestSetup(req.Called_id, c.clientID)
+			c.receiveLogger.Println("Decode setup request groupID: ", req.GroupID)
+			c.switcher.RequestSetup(req.GroupID, c.clientID)
 		}
 	case protocol.MessageType_disconnect_req:
 		{
@@ -142,7 +142,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				c.log.Warnln("Error decoding disconnect request", err)
 				return
 			}
-			c.receiveLogger.Println("Disconnecting call: ", req.Call_id)
+			c.receiveLogger.Println("Disconnecting call: ", req.GroupID)
 			c.switcher.DisconnectRequest(c.clientID, c.groupID)
 		}
 	default:
@@ -168,10 +168,10 @@ func (c *Client) SendRegisterAck() {
 }
 
 //OnSetupAck sends to the underlying connection
-func (c *Client) OnSetupAck(result int, callID int) {
+func (c *Client) OnSetupAck(result, groupID int) {
 	setupAck := protocol.Setup_ack{
 		Result:  result,
-		Call_id: callID,
+		GroupID: groupID,
 	}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
@@ -187,11 +187,10 @@ func (c *Client) OnSetupAck(result int, callID int) {
 }
 
 //OnSetupInd sends to the underlying connection
-func (c *Client) OnSetupInd(groupID, callID, clientID int) {
+func (c *Client) OnSetupInd(groupID, clientID int) {
 	setupInd := protocol.Setup_ind{
-		Calling_id: groupID,
-		Call_id:    callID,
-		Called_id:  clientID,
+		CalleeID: clientID,
+		GroupID:  groupID,
 	}
 	b, err := protocol.EncodeSetupInd(setupInd)
 	if err != nil {
@@ -209,7 +208,7 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 //OnSetupFailed sends a SetupAck with error code
 func (c *Client) OnSetupFailed() {
 	//send with result 500
-	setupAck := protocol.Setup_ack{Result: 417, Call_id: 417}
+	setupAck := protocol.Setup_ack{Result: 417, GroupID: 417}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
 		c.sendLogger.Warnln("Error while sending onsetupfailed ", err)
@@ -225,7 +224,7 @@ func (c *Client) OnSetupFailed() {
 
 //OnGroupAttachAck sends an groupattachack
 func (c *Client) OnGroupAttachAck(groupID int) {
-	groupAck := protocol.Group_attach_ack{Id: groupID, Result: 200}
+	groupAck := protocol.Group_attach_ack{GroupID: groupID, Result: 200}
 	b, err := protocol.EncodeGroupAttachAck(groupAck)
 	if err != nil {
 		c.sendLogger.Warnln("Error encode setupack ", err)

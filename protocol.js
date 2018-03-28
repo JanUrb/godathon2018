@@ -30,7 +30,7 @@ let groupAttach_ack = {
 let setup_req = {
   type: 'setup_req',
   payload: {
-    calledId: 1234
+    groupId: 1234
   }
 };
 
@@ -38,17 +38,15 @@ let setup_ack = {
   type: 'setup_ack',
   payload: {
     result: 200,
-    callId: 546
+    groupId: 123
   }
 };
 
 let setup_ind = {
   type: 'setup_ind',
   payload: {
-    callType: 'p2m',
-    calledId: 1234,
-    callingId: 345,
-    callId: 546
+    calleeId: 345,
+    groupId: 123
   }
 };
 
@@ -56,22 +54,22 @@ let setup_res = {
   type: 'setup_res',
   payload: {
     result: 200,
-    callId: 546
+    groupId: 546
   }
 };
 
 let disconnect_req = {
-  type: '',
-  callId: 1243
+  type: 'disconnect_req',
+  groupId: 1243
 };
 
 let disconnect_ack = {
-  type: '',
-  callId: 1234,
+  type: 'disconnect_ack',
+  groupId: 1234,
   result: 200
 };
 
 let disconnect_ind = {
-  type: '',
-  callId: 1224
+  type: 'disconnect_ind',
+  groupId: 1224
 };
