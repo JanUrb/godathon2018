@@ -29,6 +29,8 @@ type Client struct {
 
 var _ god.Client = (*Client)(nil) //compile time interface check
 
+var simpleIDGen = 1
+
 //New returns a new instance of the Client struct.
 func New(switcher god.Switching, conn *websocket.Conn) *Client {
 	log := logrus.New().WithFields(logrus.Fields{
@@ -37,9 +39,15 @@ func New(switcher god.Switching, conn *websocket.Conn) *Client {
 	})
 	sendLogger := log.WithField("event", "send")
 	receiveLogger := log.WithField("event", "receive")
+
+	simpleIDGen = simpleIDGen + 1
+	clientID := simpleIDGen
+	log.Infoln("UserID: ", clientID)
+
 	return &Client{
 		switcher:      switcher,
 		conn:          conn,
+		clientID:      clientID,
 		log:           log,
 		sendLogger:    sendLogger,
 		receiveLogger: receiveLogger,
@@ -122,11 +130,11 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeSetupReq(payload)
 			if err != nil {
-				c.log.Warnln("Error deciode setup req", err)
+				c.log.Warnln("Error decode setup req", err)
 				return
 			}
-			c.receiveLogger.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
-			c.switcher.RequestSetup(0, 0)
+			c.receiveLogger.Println("Decode setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
+			c.switcher.RequestSetup(req.Called_id, c.clientID)
 		}
 	case protocol.MessageType_disconnect_req:
 		{
