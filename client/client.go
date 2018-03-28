@@ -108,7 +108,6 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				return
 			}
 			c.userName = req.User
-			// c.switcher.AttachGroup(0, 0, c)
 			c.SendRegisterAck()
 
 		}
@@ -120,7 +119,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				return
 			}
 			c.receiveLogger.Info("Attaching to group: ", req.ID)
-			err = c.switcher.AttachGroup(req.ID, 0, c)
+			err = c.switcher.AttachGroup(req.ID, c.clientID, c)
 			if err != nil {
 				c.receiveLogger.Warnln("Error while attaching to group ", err)
 				return

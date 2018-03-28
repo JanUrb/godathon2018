@@ -148,7 +148,11 @@ func (s Switcher) DisconnectRequest(groupID int, clientID int) {
 func (s Switcher) RequestSetup(groupID int, clientID int) {
 	log.Infof("RequestSetup groupID %d clientID %d", groupID, clientID)
 	callIDCounter++
-	client := s.clients[clientID]
+	client, ok := s.clients[clientID]
+	if !ok {
+		log.Warnln("No client with id ", clientID, " found in currently saved clients")
+		return
+	}
 	if _, ok := s.ongoingCalls[groupID]; ok {
 		client.OnSetupFailed()
 	} else {
