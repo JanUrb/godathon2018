@@ -116,6 +116,7 @@ func (s Switcher) AttachGroup(groupID int, clientID int, client godathon2018.Cli
 	}
 	s.clients[clientID] = client
 	s.groups[groupID].AddClient(clientID, client)
+	client.OnGroupAttachAck(groupID)
 	return nil
 }
 

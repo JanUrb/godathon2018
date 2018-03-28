@@ -17,12 +17,14 @@ var (
 
 //Client represents a websocket client.
 type Client struct {
-	clientID int
-	groupID  int
-	userName string
-	switcher god.Switching
-	conn     *websocket.Conn
-	log      *logrus.Entry
+	clientID      int
+	groupID       int
+	userName      string
+	switcher      god.Switching
+	conn          *websocket.Conn
+	log           *logrus.Entry
+	sendLogger    *logrus.Entry
+	receiveLogger *logrus.Entry
 }
 
 var _ god.Client = (*Client)(nil) //compile time interface check
@@ -33,10 +35,14 @@ func New(switcher god.Switching, conn *websocket.Conn) *Client {
 		"component":  "client",
 		"clientIP: ": conn.RemoteAddr().String(),
 	})
+	sendLogger := log.WithField("event", "send")
+	receiveLogger := log.WithField("event", "receive")
 	return &Client{
-		switcher: switcher,
-		conn:     conn,
-		log:      log,
+		switcher:      switcher,
+		conn:          conn,
+		log:           log,
+		sendLogger:    sendLogger,
+		receiveLogger: receiveLogger,
 	}
 }
 
@@ -68,7 +74,7 @@ func (c *Client) Listen() {
 			continue // continue reading messages. No need to kill the client
 		}
 
-		c.log.Println("Msg Type:", genericMsg.Msg_type)
+		c.receiveLogger.Println("Handling Msg Type:", genericMsg.Msg_type)
 		c.handleMessage(genericMsg.Msg_type, genericMsg.Payload)
 	}
 }
@@ -90,11 +96,11 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 
 			req, err := protocol.DecodeRegisterReq(payload)
 			if err != nil {
-				c.log.Warnln("Could not decode registerRequest: ", err)
+				c.receiveLogger.Warnln("Could not decode registerRequest: ", err)
 				return
 			}
 			c.userName = req.User
-			c.switcher.AttachGroup(0, 0, c)
+			// c.switcher.AttachGroup(0, 0, c)
 			c.SendRegisterAck()
 
 		}
@@ -102,14 +108,13 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 		{
 			req, err := protocol.DecodeGroupAttachReq(payload)
 			if err != nil {
-				c.log.Warnln("Could not decode group attach req", err)
+				c.receiveLogger.Warnln("Could not decode group attach req", err)
 				return
 			}
-			c.log.Info("Attaching to group: ", req.ID)
-			c.log.Warnln("Ignoring call to attach group because of not having fixed types of json payloads.")
-			// err = c.switcher.AttachGroup(req.ID, 0, c)
+			c.receiveLogger.Info("Attaching to group: ", req.ID)
+			err = c.switcher.AttachGroup(req.ID, 0, c)
 			if err != nil {
-				c.log.Warnln("Error while attaching to group ", err)
+				c.receiveLogger.Warnln("Error while attaching to group ", err)
 				return
 			}
 		}
@@ -120,7 +125,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				c.log.Warnln("Error deciode setup req", err)
 				return
 			}
-			c.log.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
+			c.receiveLogger.Println("Decide setup request calltype: ", req.Call_type, " calledId ", req.Called_id)
 			c.switcher.RequestSetup(0, 0)
 		}
 	case protocol.MessageType_disconnect_req:
@@ -130,11 +135,11 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				c.log.Warnln("Error decoding disconnect request", err)
 				return
 			}
-			c.log.Println("Disconnecting call: ", req.Call_id)
+			c.receiveLogger.Println("Disconnecting call: ", req.Call_id)
 			c.switcher.DisconnectRequest(c.clientID, c.groupID)
 		}
 	default:
-		c.log.Println("Received unknown message:", messageType)
+		c.receiveLogger.Println("Received unknown message:", messageType)
 	}
 }
 
@@ -144,12 +149,13 @@ func (c *Client) SendRegisterAck() {
 	registerAck.Result = 200
 	b, err := protocol.EncodeRegisterAck(registerAck)
 	if err != nil {
-		c.log.Warnln("Failed to encode register ack")
+		c.sendLogger.Warnln("Failed to encode register ack")
 		return
 	}
+	c.sendLogger.Infoln("Sending registerAck")
 	err = c.Write(b)
 	if err != nil {
-		c.log.Warnln("Failed to write to user")
+		c.sendLogger.Warnln("Failed to write to user")
 		return
 	}
 }
@@ -162,11 +168,13 @@ func (c *Client) OnSetupAck(result int, callID int) {
 	}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
+		c.sendLogger.Warnln("Failed to encode setupAck")
 		return
 	}
+	c.sendLogger.Infoln("Sending setupAck")
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while writing SetUpAckRequest ", err)
+		c.sendLogger.Warnln("Error while writing SetUpAckRequest ", err)
 		return
 	}
 }
@@ -180,11 +188,13 @@ func (c *Client) OnSetupInd(groupID, callID, clientID int) {
 	}
 	b, err := protocol.EncodeSetupInd(setupInd)
 	if err != nil {
+		c.sendLogger.Warn("Failed to encode setupInd")
 		return
 	}
+	c.sendLogger.Infoln("Sending onSetupInd")
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while writing setupInd ", err)
+		c.sendLogger.Warnln("Error while writing setupInd ", err)
 		return
 	}
 }
@@ -195,27 +205,29 @@ func (c *Client) OnSetupFailed() {
 	setupAck := protocol.Setup_ack{Result: 417, Call_id: 417}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
-		c.log.Warnln("Error while sending onsetupfailed ", err)
+		c.sendLogger.Warnln("Error while sending onsetupfailed ", err)
 		return
 	}
+	c.sendLogger.Infoln("Sending onSetupAck Failed")
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while sending onsetupFailed ", err)
+		c.sendLogger.Warnln("Error while sending onsetupFailed ", err)
 		return
 	}
 }
 
 //OnGroupAttachAck sends an groupattachack
-func (c *Client) OnGroupAttachAck() {
-	setupAck := protocol.Setup_ack{}
-	b, err := protocol.EncodeSetupAck(setupAck)
+func (c *Client) OnGroupAttachAck(groupID int) {
+	groupAck := protocol.Group_attach_ack{Id: groupID, Result: 200}
+	b, err := protocol.EncodeGroupAttachAck(groupAck)
 	if err != nil {
-		c.log.Warnln("Error encode setupack ", err)
+		c.sendLogger.Warnln("Error encode setupack ", err)
 		return
 	}
+	c.sendLogger.Infoln("Sending groupAttachAck with groupID", groupID)
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while writing groupAttachAck ", err)
+		c.sendLogger.Warnln("Error while writing groupAttachAck ", err)
 		return
 	}
 }
@@ -225,12 +237,13 @@ func (c *Client) OnDisconnectAck() {
 	disconnectAck := protocol.Disconnect_ack{}
 	b, err := protocol.EncodeDisconnectAck(disconnectAck)
 	if err != nil {
-		c.log.Warnln("Error while writing disconnectAck ", err)
+		c.sendLogger.Warnln("Error while writing disconnectAck ", err)
 		return
 	}
+	c.sendLogger.Infoln("Sending disconnectAck")
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while writing disconnectAck ", err)
+		c.sendLogger.Warnln("Error while writing disconnectAck ", err)
 		return
 	}
 }
@@ -240,12 +253,13 @@ func (c *Client) OnDisconnectInd() {
 	disconnectInd := protocol.Disconnect_ind{}
 	b, err := protocol.EncodeDisconnectInd(disconnectInd)
 	if err != nil {
-		c.log.Warnln("Error encode disconnect ind ", err)
+		c.sendLogger.Warnln("Error encode disconnect ind ", err)
 		return
 	}
+	c.sendLogger.Infoln("Sending disconnectInd")
 	err = c.conn.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
-		c.log.Warnln("Error while writing disconnectInd ", err)
+		c.sendLogger.Warnln("Error while writing disconnectInd ", err)
 		return
 	}
 }
