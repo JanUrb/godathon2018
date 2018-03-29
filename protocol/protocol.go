@@ -48,8 +48,8 @@ type Setup_ack struct {
 }
 
 type Setup_ind struct {
-	CalleeID int `json:"calleeId"`
-	GroupID  int `json:"groupId"`
+	CallingID int `json:"callingId"`
+	GroupID   int `json:"groupId"`
 }
 
 type Setup_res struct {

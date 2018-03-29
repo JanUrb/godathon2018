@@ -189,8 +189,8 @@ func (c *Client) OnSetupAck(result, groupID int) {
 //OnSetupInd sends to the underlying connection
 func (c *Client) OnSetupInd(groupID, clientID int) {
 	setupInd := protocol.Setup_ind{
-		CalleeID: clientID,
-		GroupID:  groupID,
+		CallingID: clientID,
+		GroupID:   groupID,
 	}
 	b, err := protocol.EncodeSetupInd(setupInd)
 	if err != nil {

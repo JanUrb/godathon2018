@@ -45,7 +45,7 @@ let setup_ack = {
 let setup_ind = {
   type: 'setup_ind',
   payload: {
-    calleeId: 345,
+    callingId: 345,
     groupId: 123
   }
 };
