@@ -79,7 +79,7 @@ func (s Switcher) DisconnectRequest(groupID int, clientID int) {
 	}
 }
 
-//RequestSetup
+//RequestSetup sends a setupAck to the requesting client and a setupInd to everyone else in the call.
 func (s Switcher) RequestSetup(groupID int, clientID int) {
 	log.Infof("RequestSetup groupID %d clientID %d", groupID, clientID)
 

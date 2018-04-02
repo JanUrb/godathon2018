@@ -74,7 +74,7 @@ func (c *Client) Listen() {
 			return
 		}
 
-		var genericMsg protocol.Generic_message
+		var genericMsg protocol.GenericMessage
 		err = json.Unmarshal(b, &genericMsg)
 		if err != nil {
 			c.log.Warnln("Error reading generic message: ", err)
@@ -99,7 +99,7 @@ func (c *Client) Write(data []byte) error {
 
 func (c *Client) handleMessage(messageType string, payload []byte) {
 	switch messageType {
-	case protocol.MessageType_register_req:
+	case protocol.MessageTypeReqisterReq:
 		{
 
 			req, err := protocol.DecodeRegisterReq(payload)
@@ -111,7 +111,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 			c.SendRegisterAck()
 
 		}
-	case protocol.MessageType_groupAttach_req:
+	case protocol.MessageTypeGroupAttachReq:
 		{
 			req, err := protocol.DecodeGroupAttachReq(payload)
 			if err != nil {
@@ -125,7 +125,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 				return
 			}
 		}
-	case protocol.MessageType_setup_req:
+	case protocol.MessageTypeSetupReq:
 		{
 			req, err := protocol.DecodeSetupReq(payload)
 			if err != nil {
@@ -135,7 +135,7 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 			c.receiveLogger.Println("Decode setup request groupID: ", req.GroupID)
 			c.switcher.RequestSetup(req.GroupID, c.clientID)
 		}
-	case protocol.MessageType_disconnect_req:
+	case protocol.MessageTypeDisconnectReq:
 		{
 			req, err := protocol.DecodeDisconnectReq(payload)
 			if err != nil {
@@ -146,13 +146,13 @@ func (c *Client) handleMessage(messageType string, payload []byte) {
 			c.switcher.DisconnectRequest(c.clientID, c.groupID)
 		}
 	default:
-		c.receiveLogger.Println("Received unknown message:", messageType)
+		c.receiveLogger.Warnln("Received unknown message:", messageType)
 	}
 }
 
 //SendRegisterAck sends a register ack.
 func (c *Client) SendRegisterAck() {
-	var registerAck protocol.Register_ack
+	var registerAck protocol.RegisterAck
 	registerAck.Result = 200
 	b, err := protocol.EncodeRegisterAck(registerAck)
 	if err != nil {
@@ -169,7 +169,7 @@ func (c *Client) SendRegisterAck() {
 
 //OnSetupAck sends to the underlying connection
 func (c *Client) OnSetupAck(result, groupID int) {
-	setupAck := protocol.Setup_ack{
+	setupAck := protocol.SetupAck{
 		Result:  result,
 		GroupID: groupID,
 	}
@@ -188,7 +188,7 @@ func (c *Client) OnSetupAck(result, groupID int) {
 
 //OnSetupInd sends to the underlying connection
 func (c *Client) OnSetupInd(groupID, clientID int) {
-	setupInd := protocol.Setup_ind{
+	setupInd := protocol.SetupInd{
 		CallingID: clientID,
 		GroupID:   groupID,
 	}
@@ -208,7 +208,7 @@ func (c *Client) OnSetupInd(groupID, clientID int) {
 //OnSetupFailed sends a SetupAck with error code
 func (c *Client) OnSetupFailed() {
 	//send with result 500
-	setupAck := protocol.Setup_ack{Result: 417, GroupID: 417}
+	setupAck := protocol.SetupAck{Result: 417, GroupID: 417}
 	b, err := protocol.EncodeSetupAck(setupAck)
 	if err != nil {
 		c.sendLogger.Warnln("Error while sending onsetupfailed ", err)
@@ -224,7 +224,7 @@ func (c *Client) OnSetupFailed() {
 
 //OnGroupAttachAck sends an groupattachack
 func (c *Client) OnGroupAttachAck(groupID int) {
-	groupAck := protocol.Group_attach_ack{GroupID: groupID, Result: 200}
+	groupAck := protocol.GroupAttachAck{GroupID: groupID, Result: 200}
 	b, err := protocol.EncodeGroupAttachAck(groupAck)
 	if err != nil {
 		c.sendLogger.Warnln("Error encode setupack ", err)
@@ -240,7 +240,7 @@ func (c *Client) OnGroupAttachAck(groupID int) {
 
 //OnDisconnectAck sends a disconnectAck
 func (c *Client) OnDisconnectAck() {
-	disconnectAck := protocol.Disconnect_ack{}
+	disconnectAck := protocol.DisconnectAck{}
 	b, err := protocol.EncodeDisconnectAck(disconnectAck)
 	if err != nil {
 		c.sendLogger.Warnln("Error while writing disconnectAck ", err)
@@ -256,7 +256,7 @@ func (c *Client) OnDisconnectAck() {
 
 //OnDisconnectInd sends a disconnectInd
 func (c *Client) OnDisconnectInd() {
-	disconnectInd := protocol.Disconnect_ind{}
+	disconnectInd := protocol.DisconnectInd{}
 	b, err := protocol.EncodeDisconnectInd(disconnectInd)
 	if err != nil {
 		c.sendLogger.Warnln("Error encode disconnect ind ", err)
