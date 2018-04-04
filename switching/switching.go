@@ -89,6 +89,7 @@ func (s Switcher) RequestSetup(groupID int, clientID int) {
 		return
 	}
 	group, ok := s.groups[groupID]
+	//TODO: Should the gorup be created or should be give an error?
 	//if the group does not exist, add a new one.
 	if !ok {
 		log.Infoln("No group with id ", groupID, " found in currently saved groups")
