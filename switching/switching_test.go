@@ -65,7 +65,7 @@ func generateFakeClient() *fakeClient {
 }
 
 func TestAttachGroup(t *testing.T) {
-	switcher := NewSwitcher()
+	switcher := New()
 
 	var testData = []struct {
 		groupID  int
@@ -100,7 +100,7 @@ func TestAttachGroup(t *testing.T) {
 }
 
 func TestDetachGroup(t *testing.T) {
-	switcher := NewSwitcher()
+	switcher := New()
 
 	var testData = []struct {
 		groupID  int
@@ -141,7 +141,7 @@ func TestDetachGroup(t *testing.T) {
 }
 
 func TestRequestSetupSingleGroupMember(t *testing.T) {
-	switcher := NewSwitcher()
+	switcher := New()
 
 	groupID := 1
 	clientID := 1
@@ -166,7 +166,7 @@ func TestRequestSetupSingleGroupMember(t *testing.T) {
 }
 
 func TestRequestSetupInCall(t *testing.T) {
-	switcher := NewSwitcher()
+	switcher := New()
 
 	var testData = []struct {
 		groupID  int

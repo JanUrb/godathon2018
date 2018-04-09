@@ -24,4 +24,5 @@ type Switching interface {
 	DetachGroup(int, int) error
 	RequestSetup(int, int)
 	DisconnectRequest(int, int)
+	DisconnectAll()
 }

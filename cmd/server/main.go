@@ -1,15 +1,30 @@
 package main
 
-import "github.com/JanUrb/godathon2018/web"
-import "github.com/JanUrb/godathon2018/switching"
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/JanUrb/godathon2018/switching"
+	"github.com/JanUrb/godathon2018/web"
+)
 
 func main() {
 
-	switcher := switching.NewSwitcher()
+	interuptChan := make(chan os.Signal, 1)
+
+	signal.Notify(interuptChan, syscall.SIGINT, syscall.SIGTERM)
+
+	switcher := switching.New()
 
 	webServer := web.Web{
 		Switcher: switcher,
 	}
 
-	webServer.Run()
+	go webServer.Run()
+
+	s := <-interuptChan
+	fmt.Println("Got signal: ", s)
+	switcher.DisconnectAll()
 }

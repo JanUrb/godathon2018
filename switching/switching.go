@@ -10,7 +10,7 @@ var log = logrus.WithField("component", "switching")
 
 var _ godathon2018.Switching = Switcher{} //compile time interface check
 
-//Switcher
+//Switcher is the implementation of the switching logic.
 type Switcher struct {
 	groups  map[int]*group
 	clients map[int]godathon2018.Client
@@ -24,8 +24,8 @@ type group struct {
 	groupLogger *logrus.Entry
 }
 
-//NewSwitcher returns an instance of a switcher
-func NewSwitcher() Switcher {
+//New returns an instance of a switcher
+func New() Switcher {
 	g := Switcher{
 		groups:  make(map[int]*group),
 		clients: make(map[int]godathon2018.Client),
@@ -39,7 +39,10 @@ func (s Switcher) Call(voiceData []byte, groupID int) {
 	var group = s.groups[groupID]
 	var calledClients = group.calledClients()
 	for _, client := range calledClients {
-		client.Write(voiceData)
+		err := client.Write(voiceData)
+		if err != nil {
+			log.Warn("Error writing to client ", err)
+		}
 	}
 }
 
@@ -112,6 +115,19 @@ func (s Switcher) RequestSetup(groupID int, clientID int) {
 	for clientID, client := range group.calledClients() {
 		client.OnSetupInd(groupID, clientID)
 	}
+}
+
+//DisconnectAll disconnects all clients by sending a disconnectAck to all clients connected and removing them from all groups.
+func (s Switcher) DisconnectAll() {
+	log.Info("Disconnecting all clients")
+	for groupID, g := range s.groups {
+		for clientID, c := range g.clients {
+			c.OnDisconnectAck()
+			g.removeClient(clientID)
+		}
+		delete(s.groups, groupID)
+	}
+
 }
 
 //newGroup returns an instance of a group

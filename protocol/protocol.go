@@ -54,20 +54,20 @@ type SetupInd struct {
 
 type SetupRes struct {
 	Result  int `json:"result"`
-	GroupID int `json:"callId"`
+	GroupID int `json:"groupId"`
 }
 
 type DisconnectReq struct {
-	GroupID int `json:"callId"`
+	GroupID int `json:"groupId"`
 }
 
 type DisconnectAck struct {
 	Result  int `json:"result"`
-	GroupID int `json:"callId"`
+	GroupID int `json:"groupId"`
 }
 
 type DisconnectInd struct {
-	GroupID int `json:"callId"`
+	GroupID int `json:"groupId"`
 }
 
 func EncodeRegisterReq(data RegisterReq) ([]byte, error) {
