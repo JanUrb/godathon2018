@@ -32,6 +32,9 @@ func (web Web) Run() {
 	fs := http.FileServer(http.Dir("static/voipathon"))
 	http.Handle("/", fs)
 
+	fsTestClient := http.FileServer(http.Dir("static/testclient"))
+	http.Handle("/testclient/", http.StripPrefix("/testclient/", fsTestClient))
+
 	http.HandleFunc("/ws", web.registerClient)
 	log.Println("Waiting for connections")
 	log.Fatal(http.ListenAndServe(":4242", nil))
