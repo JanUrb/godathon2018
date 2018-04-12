@@ -10,4 +10,12 @@ class ProtocolGenerator {
       }
     };
   }
+  static createGroupAttachReq(groupId) {
+    return {
+      type: 'groupAttach_req',
+      payload: {
+        id: '9876'
+      }
+    };
+  }
 }

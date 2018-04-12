@@ -1,9 +1,9 @@
 const ADDRESS = 'ws://localhost:4242/ws';
 
 class Client {
-  constructor() {
-    this.name = 'hey';
+  constructor(statemachine) {
     this.socket = undefined;
+    this.statemachine = statemachine;
   }
 
   connect() {
@@ -13,10 +13,15 @@ class Client {
     };
     this.socket.onmessage = ev => {
       console.log('socket.onmessage: ', ev);
+      this.statemachine.handleMessage(ev.data);
     };
     this.socket.onerror = ev => {
       console.log('socket.onerror: ', ev);
     };
+  }
+
+  getState() {
+    this.statemachine.getState();
   }
 
   register() {
@@ -24,4 +29,84 @@ class Client {
       JSON.stringify(ProtocolGenerator.createRegisterReq('testUser'))
     );
   }
+
+  attachGroup(groupId) {
+    this.socket.send(
+      JSON.stringify(ProtocolGenerator.createGroupAttachReq(groupId))
+    );
+  }
+}
+
+const StateEnum = Object.freeze({
+  NotRegistered: 'Not registered',
+  Registered: 'Registered',
+  AttachedToGroup: 'Attached to group',
+  Calling: 'Calling',
+  GettingCalled: 'Getting Called'
+});
+
+class Statemachine {
+  constructor() {
+    this._state = StateEnum.NotRegistered;
+    this._connectedGroupId = undefined;
+  }
+
+  getState() {
+    console.log(this._state);
+    return this._state;
+  }
+
+  getGroup() {
+    console.log(this._connectedGroupId);
+    return this._connectedGroupId;
+  }
+
+  handleMessage(msg) {
+    console.log('Handling message ', msg);
+    let m = JSON.parse(msg);
+    switch (m.type) {
+      case 'register_ack':
+        this.onRegister(m.payload.result);
+        break;
+      case 'groupAttach_ack':
+        this.onGroupAttach();
+        break;
+      default:
+        console.log('Unknown type', m.type);
+    }
+  }
+
+  onRegister(result) {
+    if (this._state !== StateEnum.NotRegistered) {
+      console.log('Register in wrong state!');
+      return;
+    }
+    if (result !== 200) {
+      console.log('Not registering due to wrong result code');
+      this._state = StateEnum.NotRegistered;
+      return;
+    }
+    this._state = StateEnum.Registered;
+  }
+
+  onGroupAttach(groupId, resultCode) {
+    if (this._state !== StateEnum.Registered) {
+      console.log('GroupAttach in wrong state!');
+      return;
+    }
+    if (resultCode !== 200) {
+      console.log(
+        'GroupAttach not happening due to wrong result code: ',
+        resultCode
+      );
+      return;
+    }
+    this._connectedGroupId(groupId);
+    this._state = StateEnum.Registered;
+  }
+}
+
+function bootstrapTestClient() {
+  const statemachine = new Statemachine();
+  return new Client(statemachine);
 }
