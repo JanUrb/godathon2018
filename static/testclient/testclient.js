@@ -35,6 +35,14 @@ class Client {
       JSON.stringify(ProtocolGenerator.createGroupAttachReq(groupId))
     );
   }
+
+  requestSetup() {
+    this.socket.send(
+      JSON.stringify(
+        ProtocolGenerator.createSetupReq(this.statemachine._connectedGroupId)
+      )
+    );
+  }
 }
 
 const StateEnum = Object.freeze({
@@ -49,6 +57,7 @@ class Statemachine {
   constructor() {
     this._state = StateEnum.NotRegistered;
     this._connectedGroupId = undefined;
+    this._inCall = false;
   }
 
   getState() {
@@ -69,7 +78,10 @@ class Statemachine {
         this.onRegister(m.payload.result);
         break;
       case 'groupAttach_ack':
-        this.onGroupAttach();
+        this.onGroupAttach(m.payload.groupId, m.payload.result);
+        break;
+      case 'setup_ack':
+        this.onSetupAck(m.payload.groupId, m.payload.result);
         break;
       default:
         console.log('Unknown type', m.type);
@@ -101,8 +113,25 @@ class Statemachine {
       );
       return;
     }
-    this._connectedGroupId(groupId);
-    this._state = StateEnum.Registered;
+    this._connectedGroupId = groupId;
+    this._state = StateEnum.AttachedToGroup;
+  }
+
+  onSetupAck(groupId, resultCode) {
+    if (this._state !== StateEnum.AttachedToGroup) {
+      console.log('SetupAck in wrong state');
+      return;
+    }
+
+    if (resultCode !== 200) {
+      console.log(
+        'SetupAck not happening because of the wrong result code: ',
+        resultCode
+      );
+      return;
+    }
+    this._inCall = true;
+    this._state = StateEnum.Calling;
   }
 }
 

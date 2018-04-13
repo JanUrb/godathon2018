@@ -14,7 +14,16 @@ class ProtocolGenerator {
     return {
       type: 'groupAttach_req',
       payload: {
-        id: '9876'
+        groupId: groupId
+      }
+    };
+  }
+
+  static createSetupReq(groupId) {
+    return {
+      type: 'setup_req',
+      payload: {
+        groupId: groupId
       }
     };
   }

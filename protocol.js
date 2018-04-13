@@ -50,14 +50,6 @@ let setup_ind = {
   }
 };
 
-let setup_res = {
-  type: 'setup_res',
-  payload: {
-    result: 200,
-    groupId: 546
-  }
-};
-
 let disconnect_req = {
   type: 'disconnect_req',
   groupId: 1243
